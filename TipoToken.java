@@ -76,6 +76,7 @@ public enum TipoToken {
     PR_MATRIZ,
     PR_MODIFICAR,
     PR_MOSTRAR,
+    PR_METODO,
 
     PR_NORMALIZAR,
     PR_NUM,

@@ -1,0 +1,80 @@
+CREAR NUM x = 10;
+            CREAR NUM y = 5;
+            CREAR CADENA mensaje = "Resultado:";
+            
+            //Ejemplo 1: Comparación numérica simple
+            SI (x > y) ENTONCES
+                MOSTRAR mensaje + " x es mayor que y";
+            SINO
+                MOSTRAR mensaje + " x NO es mayor que y";
+            FIN_SI
+            
+            //Ejemplo 2: Comparación usando funciones numéricas
+            CREAR NUM raiz1 = RAIZ(49);
+            SI (raiz1 == 7) ENTONCES
+                MOSTRAR "La raíz cuadrada es correcta";
+            SINO
+                MOSTRAR "Algo salió mal";
+            FIN_SI
+            
+           // Ejemplo 3: Comparación entre cadenas
+            CREAR CADENA saludo = "Hola";
+            CREAR CADENA nombre = "Eddie";
+            
+            SI (saludo == "Hola") ENTONCES
+                MOSTRAR saludo + " " + nombre;
+            SINO
+                MOSTRAR "No hay saludo";
+            FIN_SI
+            
+            //Ejemplo 4: Condición anidada
+            CREAR NUM a = 3;
+            CREAR NUM b = 9;
+            CREAR NUM c = 5;
+            
+            SI (a < b) ENTONCES
+                MOSTRAR "a es menor que b";
+                SI (c < b) ENTONCES
+                    MOSTRAR "c es menor que b";
+                SINO
+                    MOSTRAR "c NO es menor que b";
+                FIN_SI
+            SINO
+                MOSTRAR "a NO es menor que b";
+            FIN_SI
+            
+            //Ejemplo 5: 
+            SI ((a + b) > d) ENTONCES
+            CREAR NUM resultado = a * b;
+            MOSTRAR mensaje + "a + b es mayor que d";
+
+            SI ((c * 3) < (b - a)) ENTONCES
+                CREAR NUM resultado1 = resultado + c;
+                MOSTRAR mensaje + " c * 3 es menor que b - a";
+
+                SI ((b / c) == 5) ENTONCES
+                    CREAR NUM resultado3 = resultado - 1;
+                    MOSTRAR mensaje + " b dividido c es 5";
+                SINO
+                    CREAR NUM resultado4 = resultado + 1;
+                    MOSTRAR mensaje + " b dividido c no es 5";
+                FIN_SI
+
+                SI ((d - a) >= (c + 1)) ENTONCES
+                    CREAR NUM resultado5 = resultado * 2;
+                    MOSTRAR mensaje + " d - a mayor o igual que c + 1";
+                FIN_SI
+            SINO
+                CREAR NUM resultado6 = resultado / 2;
+                MOSTRAR mensaje + " c * 3 no es menor que b - a";
+            FIN_SI
+
+        SINO
+            CREAR NUM resultado7 = a + d;
+            MOSTRAR mensaje + " a + b no es mayor que d";
+
+            SI ((a + b / c) == 7) ENTONCES
+                CREAR NUM resultado8 = resultado * 3;
+                MOSTRAR mensaje + " (a + b) / c es 7";
+            FIN_SI
+        FIN_SI

@@ -8,8 +8,16 @@ public class ParserLL1 {
     private int pos = 0, lineaFinal = -2;
     private boolean panicoUsado = false, lFinal = false;
 
+    // VARIABLE PARA EL ÁRBOL
+    private NodoArbol raizArbol;
+
     public ParserLL1(List<Token> tokens) {
         this.tokens = tokens;
+    }
+
+    // GETTER PARA LA UI
+    public NodoArbol getRaiz() {
+        return raizArbol;
     }
 
    private static final Set<TipoToken> TOKENS_SEGUROS_DEFAULT = Set.of(
@@ -62,36 +70,44 @@ public class ParserLL1 {
         return tokens.get(pos-1);        
     }
 
-    private void match(TipoToken esperado,String msg) {
-        if (panicoUsado) return ; 
+    private NodoArbol match(TipoToken esperado, String msg) {
+        if (panicoUsado) return null; 
 
         if (tokenActual().getTipo() == esperado) {
+            NodoArbol hoja = new NodoArbol(tokenActual().getLexema());
             pos++;
+            return hoja;
         } else {
                 errores.agregarError(101, tokens.get(pos - 1).getLinea(),msg );
                 panico();
+                return null;
         }
     }
 //-----------------------------------------------------------------------------------------------------------
 // -------------------------------------INICIO DEL PARSER----------------------------------------------------
 /*
 GRAMÁTICA UTILIZADA:
-inicio() → prCrear() | prModificar    
+inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicional()
 */
     public void inicio() {
+        raizArbol = new NodoArbol("INICIO");
         while (tokenActual().getTipo() != TipoToken.EOF) {
             switch(tokenActual().getTipo()){
             case PR_CREAR:
-                prCrear();               
-                System.out.println("Tipo: " + tokenActual().getTipo());
-
+                raizArbol.agregarHijo(prCrear());               
                 break;
             case PR_MODIFICAR:
-                prModificar();
+                raizArbol.agregarHijo(prModificar());
                 break;
             case PR_OBTENER:
-                 prObtener();
+                 raizArbol.agregarHijo(prObtener());
                  break;
+            case PR_MOSTRAR:
+                raizArbol.agregarHijo(prMostrar());
+                break;
+            case PR_SI:
+                raizArbol.agregarHijo(condicional());
+                break;
             default:
                 errores.agregarError(1,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
@@ -104,7 +120,35 @@ inicio() → prCrear() | prModificar
         match(TipoToken.EOF,"Algo salió mal.");
     }
 
-    
+    // Esto es para evitar hacer el ciclo cuando hacemos condicionales:
+    public NodoArbol inicioSinWhile() {
+            NodoArbol nodo = null;
+            switch(tokenActual().getTipo()){
+            case PR_CREAR:
+                nodo = prCrear();               
+                break;
+            case PR_MODIFICAR:
+                nodo = prModificar();
+                break;
+            case PR_OBTENER:
+                 nodo = prObtener();
+                 break;
+            case PR_MOSTRAR:
+                nodo = prMostrar();
+                break;
+            case PR_SI:
+                nodo = condicional();
+                break;
+            default:
+                errores.agregarError(1,
+                    lFinal ?  lineaFinal : tokenActual().getLinea(),
+                    "Se espera una acción inicial como CREAR, MODIFICAR, OBTENER en vez de: " + tokenActual().getLexema()
+                );
+                panico();
+            }
+            panicoUsado = false;
+            return nodo;
+        }
 //---------------------------------------------------------------------------------------------------------------
 // -------------------------------------CREACIÓN DE VARIABLES----------------------------------------------------
 /*
@@ -112,33 +156,34 @@ GRAMÁTICA UTILIZADA:
 prCrear() → prCadena() | prNum() | prVector() | prMatriz()
      
 */
-    private void prCrear() {
+    private NodoArbol prCrear() {
 
         if (tokenActual().getTipo() != TipoToken.PR_CREAR) {
             errores.agregarError(101,tokenActual().getLinea(),"Se esperaba 'CREAR'");
             panico();
-            return;
+            return null;
         }
-
-        match(TipoToken.PR_CREAR,"Se esperaba 'CREAR'");
+        
+        NodoArbol nodo = new NodoArbol("prCrear");
+        nodo.agregarHijo(match(TipoToken.PR_CREAR,"Se esperaba 'CREAR'"));
 
         // Decidir qué tipo se va a crear
         switch (tokenActual().getTipo()) {
 
             case PR_CADENA:
-                prCadena();
+                nodo.agregarHijo(prCadena());
                 break;
 
             case PR_NUM:
-                prNum();
+                nodo.agregarHijo(prNum());
                 break;
 
             case PR_VECTOR:
-                prVector();
+                nodo.agregarHijo(prVector());
                 break;
 
             case PR_MATRIZ:
-                prMatriz();
+                nodo.agregarHijo(prMatriz());
                 break;
 
             default:
@@ -148,6 +193,7 @@ prCrear() → prCadena() | prNum() | prVector() | prMatriz()
                 );
                 panico();
         }
+        return nodo;
     }
 
 //------------------------------------------------------------------------------------------------------
@@ -164,46 +210,51 @@ operandoCadena() → CADENA
                 | IDENTIFICADOR
                 | '(' expresionNumerica() ')'
 */
-    private void prCadena() {
-        match(TipoToken.PR_CADENA,"Se espera 'CADENA' después de 'CREAR'");          
-        match(TipoToken.IDENTIFICADOR,"Se espera el nombre de la CADENA");
-        match(TipoToken.ASIGNACION,"Se espera el operador de ASIGNACIÓN '=' después del identificador: '" + tokens.get(pos - 1).getLexema() + "'.");
-        expresionCadena();
+    private NodoArbol prCadena() {
+        NodoArbol nodo = new NodoArbol("prCadena");
+        nodo.agregarHijo(match(TipoToken.PR_CADENA,"Se espera 'CADENA' después de 'CREAR'"));          
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR,"Se espera el nombre de la CADENA"));
+        nodo.agregarHijo(match(TipoToken.ASIGNACION,"Se espera el operador de ASIGNACIÓN '=' después del identificador: '" + tokens.get(pos - 1).getLexema() + "'."));
+        nodo.agregarHijo(expresionCadena());
         
         validacionFin(TipoToken.PARENT_IZQ,TipoToken.PARENT_DER,
         "Sobra un PARÉNTESIS de inicio '('."
         + " En caso de querer comenzar una operación numérica dentro de un paréntesis, es necesario agregar un opeardor de suma antes de abrir un paréntesis",
         "Sobra un PARÉNTESIS de cierre ')' ");
-        match(TipoToken.PUNTO_Y_COMA,"Se espera un ';' para dar fin a la instrucción");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA,"Se espera un ';' para dar fin a la instrucción"));
+        return nodo;
     }
-    private void expresionCadena() {
-        if (panicoUsado) return;
-        operandoCadena();
-        restoCadena();
+    private NodoArbol expresionCadena() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("expresionCadena");
+        nodo.agregarHijo(operandoCadena());
+        nodo.agregarHijo(restoCadena());
+        return nodo;
     }    
-    private void operandoCadena() {
-        if (panicoUsado) return;
+    private NodoArbol operandoCadena() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("operandoCadena");
 
         switch (tokenActual().getTipo()) {
 
             case CADENA:
-                match(TipoToken.CADENA,
-                    "Se esperaba una cadena literal.");
+                nodo.agregarHijo(match(TipoToken.CADENA,
+                    "Se esperaba una cadena literal."));
                 break;
 
             case IDENTIFICADOR:
-                match(TipoToken.IDENTIFICADOR,
-                    "Se esperaba un identificador válido.");
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR,
+                    "Se esperaba un identificador válido."));
                 break;
 
             case PARENT_IZQ:
-                match(TipoToken.PARENT_IZQ,
-                    "Se esperaba '(' para iniciar una expresión numérica.");
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ,
+                    "Se esperaba '(' para iniciar una expresión numérica."));
 
-                expresionNumerica();
+                nodo.agregarHijo(expresionNumerica());
 
-                match(TipoToken.PARENT_DER,
-                    "Se esperaba ')' para cerrar la expresión numérica.");
+                nodo.agregarHijo(match(TipoToken.PARENT_DER,
+                    "Se esperaba ')' para cerrar la expresión numérica."));
                 break;
 
             default:
@@ -215,15 +266,19 @@ operandoCadena() → CADENA
                 );
                 panico();
         }
+        return nodo;
     }
 
-    private void restoCadena() {
-        if (panicoUsado) return;
+    private NodoArbol restoCadena() {
+        if (panicoUsado) return null;
         if (tokenActual().getTipo() == TipoToken.OP_SUMA) {
-            match(TipoToken.OP_SUMA,"Se espera un operador de suma (+).");
-            operandoCadena();
-            restoCadena();
+            NodoArbol nodo = new NodoArbol("restoCadena");
+            nodo.agregarHijo(match(TipoToken.OP_SUMA,"Se espera un operador de suma (+)."));
+            nodo.agregarHijo(operandoCadena());
+            nodo.agregarHijo(restoCadena());
+            return nodo;
         }
+        return null;
     }
     
     
@@ -271,106 +326,123 @@ dosArgumentos() → '(' operandoSimple() ',' operandoSimple() ')'
 
 operandoSimple() → expresionNumerica()
 */
-    private void prNum() {
-        match(TipoToken.PR_NUM,
-            "Se espera la palabra reservada NUM para crear una variable numérica.");
+    private NodoArbol prNum() {
+        NodoArbol nodo = new NodoArbol("prNum");
+        nodo.agregarHijo(match(TipoToken.PR_NUM,
+            "Se espera la palabra reservada NUM para crear una variable numérica."));
 
-        match(TipoToken.IDENTIFICADOR,
-            "Se espera el identificador del número a crear.");
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR,
+            "Se espera el identificador del número a crear."));
 
-        match(TipoToken.ASIGNACION,
+        nodo.agregarHijo(match(TipoToken.ASIGNACION,
             "Se espera el operador de asignación '=' después del identificador '"
-            + tokenAnterior().getLexema() + "'.");
+            + tokenAnterior().getLexema() + "'."));
 
-        expresionNumerica(); 
+        nodo.agregarHijo(expresionNumerica()); 
         validacionFin(TipoToken.PARENT_IZQ,TipoToken.PARENT_DER,
         "Sobra un PARÉNTESIS de inicio '(' al final de la declaración de la EXPRESIÓN NUMÉRICA."
         + " En caso de querer comenzar otra operación es necesario agregar un opeardor aritmético antes de abrir un paréntesis",
         "Sobra un PARÉNTESIS de cierre ')' al final de la declaración de la EXPRESIÓN NUMÉRICA.");
         
-        match(TipoToken.PUNTO_Y_COMA,
-            "Se espera ';' para finalizar la declaración del número.");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA,
+            "Se espera ';' para finalizar la declaración del número."));
+        return nodo;
     }
 
-    private void expresionNumerica() {
-        if (panicoUsado) return;
+    private NodoArbol expresionNumerica() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("expresionNumerica");
 
-        terminoNumerico();
-        continuacionSumaResta();
+        nodo.agregarHijo(terminoNumerico());
+        nodo.agregarHijo(continuacionSumaResta());
+        return nodo;
     }
 
-    private void continuacionSumaResta() {
-        if (panicoUsado) return;
+    private NodoArbol continuacionSumaResta() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.OP_SUMA ||
             tokenActual().getTipo() == TipoToken.OP_RESTA) {
+            
+            NodoArbol nodo = new NodoArbol("continuacionSumaResta");
 
-            match(tokenActual().getTipo(),
-                "Se esperaba un operador aritmético válido '+' o '-'.");
+            nodo.agregarHijo(match(tokenActual().getTipo(),
+                "Se esperaba un operador aritmético válido '+' o '-'."));
 
-            terminoNumerico();
-            continuacionSumaResta();
+            nodo.agregarHijo(terminoNumerico());
+            nodo.agregarHijo(continuacionSumaResta());
+            return nodo;
         }
+        return null;
     }
 
-    private void terminoNumerico() {
-        if (panicoUsado) return;
+    private NodoArbol terminoNumerico() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("terminoNumerico");
 
-        factorNumerico();
-        continuacionMultiplicacionDivision();
+        nodo.agregarHijo(factorNumerico());
+        nodo.agregarHijo(continuacionMultiplicacionDivision());
+        return nodo;
     }
 
-    private void continuacionMultiplicacionDivision() {
-        if (panicoUsado) return;
+    private NodoArbol continuacionMultiplicacionDivision() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.OP_MULT ||
             tokenActual().getTipo() == TipoToken.OP_DIV) {
+            
+            NodoArbol nodo = new NodoArbol("continuacionMultiplicacionDivision");
 
-            match(tokenActual().getTipo(),
-                "Se esperaba un operador aritmético '*' o '/'.");
+            nodo.agregarHijo(match(tokenActual().getTipo(),
+                "Se esperaba un operador aritmético '*' o '/'."));
 
-            factorNumerico();
-            continuacionMultiplicacionDivision();
+            nodo.agregarHijo(factorNumerico());
+            nodo.agregarHijo(continuacionMultiplicacionDivision());
+            return nodo;
         }
+        return null;
     }
 
-    private void factorNumerico() {
-        if (panicoUsado) return;
+    private NodoArbol factorNumerico() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("factorNumerico");
 
         if (tokenActual().getTipo() == TipoToken.OP_SUMA ||
             tokenActual().getTipo() == TipoToken.OP_RESTA) {
 
-            match(tokenActual().getTipo(),
-                "Se esperaba un signo '+' o '-' válido.");
+            nodo.agregarHijo(match(tokenActual().getTipo(),
+                "Se esperaba un signo '+' o '-' válido."));
 
-            operandoNumerico();
+            nodo.agregarHijo(operandoNumerico());
         } else {
-            operandoNumerico();
+            nodo.agregarHijo(operandoNumerico());
         }
+        return nodo;
     }
 
 
-    private void operandoNumerico() {
-        if (panicoUsado) return;
+    private NodoArbol operandoNumerico() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("operandoNumerico");
 
         switch (tokenActual().getTipo()) {
 
             case NUMERO_REAL:
-                match(TipoToken.NUMERO_REAL,
-                    "Se esperaba un número real válido.");
+                nodo.agregarHijo(match(TipoToken.NUMERO_REAL,
+                    "Se esperaba un número real válido."));
                 break;
 
             case IDENTIFICADOR:
-                match(TipoToken.IDENTIFICADOR,
-                    "Se esperaba un identificador numérico válido.");
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR,
+                    "Se esperaba un identificador numérico válido."));
                 break;
 
             case PARENT_IZQ:
-                match(TipoToken.PARENT_IZQ,
-                    "Se esperaba '(' para iniciar una expresión numérica.");
-                expresionNumerica();
-                match(TipoToken.PARENT_DER,
-                    "Se esperaba ')' para cerrar la expresión numérica.");
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ,
+                    "Se esperaba '(' para iniciar una expresión numérica."));
+                nodo.agregarHijo(expresionNumerica());
+                nodo.agregarHijo(match(TipoToken.PARENT_DER,
+                    "Se esperaba ')' para cerrar la expresión numérica."));
                 break;
 
             case PR_RAIZ:
@@ -386,12 +458,12 @@ operandoSimple() → expresionNumerica()
             case PR_LOG10:
             case PR_PI:
             case PR_EXP:
-                funcionNumerica();
+                nodo.agregarHijo(funcionNumerica());
                 break;
             case PR_OBTENER:
-                match(TipoToken.PR_OBTENER, 
-                    "Se espera la palabra reservada 'OBTENER'.");
-                obtenerCelda();
+                nodo.agregarHijo(match(TipoToken.PR_OBTENER, 
+                    "Se espera la palabra reservada 'OBTENER'."));
+                nodo.agregarHijo(obtenerCelda());
                 break;
 
             default:
@@ -404,76 +476,78 @@ operandoSimple() → expresionNumerica()
                 );
                 panico();
         }
+        return nodo;
     }
 
-    private void funcionNumerica() {
-        if (panicoUsado) return;
+    private NodoArbol funcionNumerica() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("funcionNumerica");
 
         switch (tokenActual().getTipo()) {
 
             case PR_RAIZ:
-                match(TipoToken.PR_RAIZ,"");
-                unArgumento("RAIZ(x)");
+                nodo.agregarHijo(match(TipoToken.PR_RAIZ,""));
+                nodo.agregarHijo(unArgumento("RAIZ(x)"));
                 break;
 
             case PR_POTENCIA:
-                match(TipoToken.PR_POTENCIA,"");
-                dosArgumentos("POTENCIA(base,exponente)");
+                nodo.agregarHijo(match(TipoToken.PR_POTENCIA,""));
+                nodo.agregarHijo(dosArgumentos("POTENCIA(base,exponente)"));
                 break;
 
             case PR_COS:
-                match(TipoToken.PR_COS,"");
-                unArgumento("COS(x)");
+                nodo.agregarHijo(match(TipoToken.PR_COS,""));
+                nodo.agregarHijo(unArgumento("COS(x)"));
                 break;
 
             case PR_SEN:
-                match(TipoToken.PR_SEN,"");
-                unArgumento("SEN(x)");
+                nodo.agregarHijo(match(TipoToken.PR_SEN,""));
+                nodo.agregarHijo(unArgumento("SEN(x)"));
                 break;
 
             case PR_TAN:
-                match(TipoToken.PR_TAN,"");
-                unArgumento("TAN(x)");
+                nodo.agregarHijo(match(TipoToken.PR_TAN,""));
+                nodo.agregarHijo(unArgumento("TAN(x)"));
                 break;
 
             case PR_ARCSEN:
-                match(TipoToken.PR_ARCSEN,"");
-                unArgumento("ARCSEN(x)");
+                nodo.agregarHijo(match(TipoToken.PR_ARCSEN,""));
+                nodo.agregarHijo(unArgumento("ARCSEN(x)"));
                 break;
 
             case PR_ARCCOS:
-                match(TipoToken.PR_ARCCOS,"");
-                unArgumento("ARCCOS(x)");
+                nodo.agregarHijo(match(TipoToken.PR_ARCCOS,""));
+                nodo.agregarHijo(unArgumento("ARCCOS(x)"));
                 break;
 
             case PR_ARCTAN:
-                match(TipoToken.PR_ARCTAN,"");
-                unArgumento("ARCTAN(x)");
+                nodo.agregarHijo(match(TipoToken.PR_ARCTAN,""));
+                nodo.agregarHijo(unArgumento("ARCTAN(x)"));
                 break;
 
             case PR_LN:
-                match(TipoToken.PR_LN,"");
-                unArgumento("LN(x)");
+                nodo.agregarHijo(match(TipoToken.PR_LN,""));
+                nodo.agregarHijo(unArgumento("LN(x)"));
                 break;
 
             case PR_LOG:
-                match(TipoToken.PR_LOG,"");
-                dosArgumentos("LOG(base,argumento)");
+                nodo.agregarHijo(match(TipoToken.PR_LOG,""));
+                nodo.agregarHijo(dosArgumentos("LOG(base,argumento)"));
                 break;
 
             case PR_LOG10:
-                match(TipoToken.PR_LOG10,"");
-                unArgumento("LOG10(x)");
+                nodo.agregarHijo(match(TipoToken.PR_LOG10,""));
+                nodo.agregarHijo(unArgumento("LOG10(x)"));
                 break;
 
             case PR_PI:
-                match(TipoToken.PR_PI,
-                    "PI es una constante y no recibe argumentos.");
+                nodo.agregarHijo(match(TipoToken.PR_PI,
+                    "PI es una constante y no recibe argumentos."));
                 break;
 
             case PR_EXP:
-                match(TipoToken.PR_EXP,"");
-                unArgumento("EXP(exponente)");
+                nodo.agregarHijo(match(TipoToken.PR_EXP,""));
+                nodo.agregarHijo(unArgumento("EXP(exponente)"));
                 break;
 
             default:
@@ -484,35 +558,40 @@ operandoSimple() → expresionNumerica()
                 );
                 panico();
         }
+        return nodo;
     }
 
-    private void unArgumento(String esperado) {
-        match(TipoToken.PARENT_IZQ,
-            "Se esperaba el argumento de la función con la forma: " + esperado);
+    private NodoArbol unArgumento(String esperado) {
+        NodoArbol nodo = new NodoArbol("unArgumento");
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ,
+            "Se esperaba el argumento de la función con la forma: " + esperado));
 
-        operandoSimple();
+        nodo.agregarHijo(operandoSimple());
         
-        match(TipoToken.PARENT_DER,
-            "Se esperaba el argumento de la función con la forma: " + esperado);
+        nodo.agregarHijo(match(TipoToken.PARENT_DER,
+            "Se esperaba el argumento de la función con la forma: " + esperado));
+        return nodo;
     }
 
-    private void dosArgumentos(String esperado) {
-        match(TipoToken.PARENT_IZQ,
-            "Se esperaban los argumentos de la función con la forma: " + esperado);
+    private NodoArbol dosArgumentos(String esperado) {
+        NodoArbol nodo = new NodoArbol("dosArgumentos");
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ,
+            "Se esperaban los argumentos de la función con la forma: " + esperado));
 
-        operandoSimple();
+        nodo.agregarHijo(operandoSimple());
 
-        match(TipoToken.COMA,
-            "Se esperaban dos argumentos separados por una coma ','. Ejemplo: " + esperado);
+        nodo.agregarHijo(match(TipoToken.COMA,
+            "Se esperaban dos argumentos separados por una coma ','. Ejemplo: " + esperado));
         validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
-        operandoSimple();
+        nodo.agregarHijo(operandoSimple());
 
-        match(TipoToken.PARENT_DER,
-            "Se esperaban los argumentos de la función con la forma: " + esperado);
+        nodo.agregarHijo(match(TipoToken.PARENT_DER,
+            "Se esperaban los argumentos de la función con la forma: " + esperado));
+        return nodo;
     }
 
-    private void operandoSimple() {
-        if (panicoUsado) return;
+    private NodoArbol operandoSimple() {
+        if (panicoUsado) return null;
 
         switch (tokenActual().getTipo()) {
 
@@ -532,8 +611,7 @@ operandoSimple() → expresionNumerica()
             case PR_PI:
             case PR_EXP:
             case PR_OBTENER:
-                expresionNumerica();
-                break;
+                return expresionNumerica();
 
             default: 
                 if(tokenAnterior().getLexema().equals("(") && tokenActual().getLexema().equals(")")){ 
@@ -544,6 +622,7 @@ operandoSimple() → expresionNumerica()
                         "El argumento de la función debe ser un número real, un identificador o una expresión numérica válida.");
                         }
                 panico();
+                return null;
         }
     }
 
@@ -563,33 +642,36 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
 
 */
 
-    private void prVector() {
-        match(TipoToken.PR_VECTOR, "Se espera 'VECTOR' después de 'CREAR'.");
-        match(TipoToken.IDENTIFICADOR, "Se espera el identificador del vector a crear.");
-        match(TipoToken.ASIGNACION,
+    private NodoArbol prVector() {
+        NodoArbol nodo = new NodoArbol("prVector");
+        nodo.agregarHijo(match(TipoToken.PR_VECTOR, "Se espera 'VECTOR' después de 'CREAR'."));
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador del vector a crear."));
+        nodo.agregarHijo(match(TipoToken.ASIGNACION,
                 "Se espera el operador de ASIGNACIÓN '=' después del identificador: '" +
-                tokenAnterior().getLexema() + "'.");
-        expresionVector();
-        match(TipoToken.PUNTO_Y_COMA, "Se espera un ';' para dar fin a la declaración del vector.");
+                tokenAnterior().getLexema() + "'."));
+        nodo.agregarHijo(expresionVector());
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, "Se espera un ';' para dar fin a la declaración del vector."));
+        return nodo;
     }
 
-        private void expresionVector() {
-        if (panicoUsado) return;
+        private NodoArbol expresionVector() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("expresionVector");
 
         switch (tokenActual().getTipo()) {
 
             case CORCHETE_IZQ:
-                match(
+                nodo.agregarHijo(match(
                     TipoToken.CORCHETE_IZQ,
                     "Se espera '[' para iniciar la definición del vector."
-                );
+                ));
 
-                listaElementosVector();
+                nodo.agregarHijo(listaElementosVector());
 
-                match(
+                nodo.agregarHijo(match(
                     TipoToken.CORCHETE_DER,
                     "Se espera ']' para cerrar la definición del vector."
-                );
+                ));
                 validacionFin(
                     TipoToken.CORCHETE_IZQ,
                     TipoToken.CORCHETE_DER,
@@ -599,19 +681,19 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
                 break;
 
             case PR_OBTENER:
-                match(
+                nodo.agregarHijo(match(
                     TipoToken.PR_OBTENER,
                     "Se espera la palabra reservada 'OBTENER'."
-                );
+                ));
 
                 switch (tokenActual().getTipo()) {
 
                     case PR_FILA:
-                        obtenerFila();
+                        nodo.agregarHijo(obtenerFila());
                         break;
 
                     case PR_COLUMNA:
-                        obtenerColumna();
+                        nodo.agregarHijo(obtenerColumna());
                         break;
 
                     default:
@@ -621,7 +703,7 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
                             "Después de 'OBTENER' se esperaba FILA o COLUMNA."
                         );
                         panico();
-                        return;
+                        return null;
                 }
                 break;
 
@@ -634,15 +716,17 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
                 );
                 panico();
         }
+        return nodo;
     }
 
 
-    private void listaElementosVector() {
-        if (panicoUsado) return;
+    private NodoArbol listaElementosVector() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("listaElementosVector");
 
         // Primer elemento del vetor
-        expresionNumerica();
-        if (panicoUsado) return;
+        nodo.agregarHijo(expresionNumerica());
+        if (panicoUsado) return null;
 
         // Validando que el vector sea de al menos dos elementos
         if (tokenActual().getTipo() != TipoToken.COMA) {
@@ -652,41 +736,110 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
                 "Un vector debe contener al menos dos elementos (n ≥ 2). Debe estar expresado de la siguiente forma: VECTOR[a,b]"
             );
             panico();
-            return;
+            return null;
         }
 
-        match(TipoToken.COMA,
-                "Se espera ',' para separar los elementos del vector.");
+        nodo.agregarHijo(match(TipoToken.COMA,
+                "Se espera ',' para separar los elementos del vector."));
         validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
 
         // Segundo elemento (obligatorio)
-        expresionNumerica();
-        if (panicoUsado) return;
+        nodo.agregarHijo(expresionNumerica());
+        if (panicoUsado) return null;
 
         // Resto opcional
-        restoElementosVector();
+        nodo.agregarHijo(restoElementosVector());
+        return nodo;
     }
 
-    private void restoElementosVector() {
-        if (panicoUsado) return;
+    private NodoArbol restoElementosVector() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.COMA) {
-            match(TipoToken.COMA,
-                    "Se espera ',' para separar los elementos del vector.");
+            NodoArbol nodo = new NodoArbol("restoElementosVector");
+            nodo.agregarHijo(match(TipoToken.COMA,
+                    "Se espera ',' para separar los elementos del vector."));
             validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
-            expresionNumerica();
-            restoElementosVector();
+            nodo.agregarHijo(expresionNumerica());
+            nodo.agregarHijo(restoElementosVector());
+            return nodo;
         }
+        return null;
     }
 
+/*
+Gramática para las operaciones especiales que seran necesarias en la creación de matrices.
+operacionEspecial()
+    → PR_TRANSPUESTA '(' IDENTIFICADOR ')' 
+    | PR_INVERSA     '(' IDENTIFICADOR ')'
+    | PR_ADJUNTA     '(' IDENTIFICADOR ')'
+    | PR_COFACTORES  '(' IDENTIFICADOR ')'
+    | PR_GAUSS       '(' IDENTIFICADOR ')'
+    | PR_GAUSSJ      '(' IDENTIFICADOR ')'
+*/
+    private NodoArbol operacionEspecial() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("operacionEspecial");
+
+        switch (tokenActual().getTipo()) {
+            case PR_TRANSPUESTA:
+                nodo.agregarHijo(match(TipoToken.PR_TRANSPUESTA, "Se espera la palabra reservada 'TRANSPUESTA'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'TRANSPUESTA'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz a operar."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la operación 'TRANSPUESTA'."));
+                break;
+
+            case PR_INVERSA:
+                nodo.agregarHijo(match(TipoToken.PR_INVERSA, "Se espera la palabra reservada 'INVERSA'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'INVERSA'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz a operar."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la operación 'INVERSA'."));
+                break;
+
+            case PR_ADJUNTA:
+                nodo.agregarHijo(match(TipoToken.PR_ADJUNTA, "Se espera la palabra reservada 'ADJUNTA'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'ADJUNTA'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz a operar."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la operación 'ADJUNTA'."));
+                break;
+
+            case PR_COFACTORES:
+                nodo.agregarHijo(match(TipoToken.PR_COFACTORES, "Se espera la palabra reservada 'COFACTORES'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'COFACTORES'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz a operar."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la operación 'COFACTORES'."));
+                break;
+
+            case PR_GAUSS:
+                nodo.agregarHijo(match(TipoToken.PR_GAUSS, "Se espera la palabra reservada 'GAUSS'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'GAUSS'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz a operar."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la operación 'GAUSS'."));
+                break;
+
+            case PR_GAUSSJ:
+                nodo.agregarHijo(match(TipoToken.PR_GAUSSJ, "Se espera la palabra reservada 'GAUSSJ'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'GAUSSJ'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz a operar."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la operación 'GAUSSJ'."));
+                break;
+
+            default:
+                errores.agregarError(
+                    420,
+                    tokenActual().getLinea(),
+                    "Se esperaba una operación especial de matriz como TRANSPUESTA, INVERSA, ADJUNTA, COFACTORES, GAUSS o GAUSSJ."
+                );
+                panico();
+                break;
+        }
+        return nodo;
+    }
 
 
 //------------------------------------------------------------------------------------------------------
 // -------------------------------------CREAR MATRIZ----------------------------------------------------    
 /*
-────────────────────────────────────────────────────────────
-CREACIÓN DE MATRICES
-────────────────────────────────────────────────────────────
 
 prMatriz()
     → MATRIZ definicionMatriz()
@@ -694,10 +847,6 @@ prMatriz()
 definicionMatriz()
     → matrizConTipo()
     | matrizNormal()
-
-────────────────────────────────────────────────────────────
-MATRIZ CON TIPO (IDENTIDAD, CEROS, etc.)
-────────────────────────────────────────────────────────────
 
 matrizConTipo()
     → tipoMatriz() tamañoMatriz() IDENTIFICADOR ';'
@@ -708,9 +857,6 @@ tipoMatriz()
     | CEROS
     | UNOS
 
-────────────────────────────────────────────────────────────
-MATRIZ NORMAL
-────────────────────────────────────────────────────────────
 
 matrizNormal()
     → tamañoMatriz() IDENTIFICADOR finMatriz()
@@ -718,18 +864,10 @@ matrizNormal()
 finMatriz()
     → '=' expresionMatriz() ';'
 
-────────────────────────────────────────────────────────────
-EXPRESIÓN DE MATRIZ
-────────────────────────────────────────────────────────────
-
 expresionMatriz()
     → terminoMatriz() continuacionSumaRestaMatriz()
-    | '[' listaFilas() ']'
+    | '[' listaFilas() ']' | operacionEspecialMatriz()
 
-────────────────────────────────────────────────────────────
-OPERACIONES ENTRE MATRICES
-(SOLO IDENTIFICADORES)
-────────────────────────────────────────────────────────────
 
 terminoMatriz()
     → IDENTIFICADOR continuacionMultEscalar()
@@ -743,10 +881,6 @@ continuacionSumaRestaMatriz()
     → '+' terminoMatriz() continuacionSumaRestaMatriz()
     | '-' terminoMatriz() continuacionSumaRestaMatriz()
     | ε
-
-────────────────────────────────────────────────────────────
-MATRIZ LITERAL
-────────────────────────────────────────────────────────────
 
 listaFilas()
     → filaMatriz() ',' filaMatriz() restoFilas()
@@ -765,35 +899,31 @@ restoElementosFila()
     → ',' expresionNumerica() restoElementosFila()
     | ε
 
-────────────────────────────────────────────────────────────
-TAMAÑO
-────────────────────────────────────────────────────────────
-
 tamañoMatriz()
     → TAMAÑO '(' expresionNumerica() ',' expresionNumerica() ')'
 
 */   
 
-    private void prMatriz() {
-        match(TipoToken.PR_MATRIZ, "Se espera la palabra reservada 'MATRIZ' después de 'CREAR'.");
-        definicionMatriz();
+    private NodoArbol prMatriz() {
+        NodoArbol nodo = new NodoArbol("prMatriz");
+        nodo.agregarHijo(match(TipoToken.PR_MATRIZ, "Se espera la palabra reservada 'MATRIZ' después de 'CREAR'."));
+        nodo.agregarHijo(definicionMatriz());
+        return nodo;
     }
 
     /* definicionMatriz → matrizConTipo | matrizNormal */
-    private void definicionMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol definicionMatriz() {
+        if (panicoUsado) return null;
 
         switch (tokenActual().getTipo()) {
             case PR_IDENTIDAD:
             case PR_DIAGONAL:
             case PR_CEROS:
             case PR_UNOS:
-                matrizConTipo();
-                break;
+                return matrizConTipo();
 
             case PR_TAMAÑO:
-                matrizNormal();
-                break;
+                return matrizNormal();
 
             default:
                 errores.agregarError(
@@ -803,38 +933,42 @@ tamañoMatriz()
                     + "o una definición normal con TAMAÑO(filas,columnas)."
                 );
                 panico();
+                return null;
         }
     }
 
     /* matrizConTipo → tipoMatriz tamañoMatriz IDENTIFICADOR ';' */
-    private void matrizConTipo() {
-        if (panicoUsado) return;
-        tipoMatriz();
-        tamañoMatriz();
-        match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz.");
+    private NodoArbol matrizConTipo() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("matrizConTipo");
+        nodo.agregarHijo(tipoMatriz());
+        nodo.agregarHijo(tamañoMatriz());
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz."));
         if (tokenActual().getTipo() != TipoToken.PUNTO_Y_COMA){
-            if (panicoUsado) return;
+            if (panicoUsado) return null;
             errores.agregarError(
                     401,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "En una matriz definida por tipo y tamaño se espera un ';' después de el identificador para dar fin a su declaración."
                 );
             panico();
-            return;
+            return null;
         }
-        match(TipoToken.PUNTO_Y_COMA, "Se espera ';' al final de la declaración de la matriz.");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, "Se espera ';' al final de la declaración de la matriz."));
+        return nodo;
     }
 
     /* tipoMatriz → IDENTIDAD | DIAGONAL | CEROS | UNOS */
-    private void tipoMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol tipoMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("tipoMatriz");
 
         switch (tokenActual().getTipo()) {
             case PR_IDENTIDAD:
             case PR_DIAGONAL:
             case PR_CEROS:
             case PR_UNOS:
-                match(tokenActual().getTipo(), "Se espera un tipo válido de matriz.");
+                nodo.agregarHijo(match(tokenActual().getTipo(), "Se espera un tipo válido de matriz."));
                 break;
 
             default:
@@ -845,58 +979,72 @@ tamañoMatriz()
                 );
                 panico();
         }
+        return nodo;
     }
 
     /* matrizNormal → tamañoMatriz IDENTIFICADOR finMatriz */
-    private void matrizNormal() {
-        if (panicoUsado) return;
-        tamañoMatriz();
-        match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz.");
-        finMatriz();
-        
+    private NodoArbol matrizNormal() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("matrizNormal");
+        nodo.agregarHijo(tamañoMatriz());
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz."));
+        nodo.agregarHijo(finMatriz());
+        return nodo;
     }
 
-    private void finMatriz() {
-        if (panicoUsado) return;
-        match(TipoToken.ASIGNACION, "Se espera '=' para asignar los valores de la matriz.");
-        expresionMatriz();
-        match(TipoToken.PUNTO_Y_COMA, "Se espera ';' al final de la definición de la matriz.");
+    private NodoArbol finMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("finMatriz");
+        nodo.agregarHijo(match(TipoToken.ASIGNACION, "Se espera '=' para asignar los valores de la matriz."));
+        nodo.agregarHijo(expresionMatriz());
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, "Se espera ';' al final de la definición de la matriz."));
+        return nodo;
     }
 
-    private void tamañoMatriz() {
-        if (panicoUsado) return;
-        match(TipoToken.PR_TAMAÑO, "Se espera la palabra reservada 'TAMAÑO', después de: '" + tokenAnterior().getLexema() + "'");
-        match(TipoToken.PARENT_IZQ, "Se espera '(' después de TAMAÑO.");
-        expresionNumerica();
+    private NodoArbol tamañoMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("tamañoMatriz");
+        nodo.agregarHijo(match(TipoToken.PR_TAMAÑO, "Se espera la palabra reservada 'TAMAÑO', después de: '" + tokenAnterior().getLexema() + "'"));
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de TAMAÑO."));
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.COMA, "Se espera ',' para separar el tammaño de las filas y columnas.");
+        nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar el tammaño de las filas y columnas."));
         validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la definición del tamaño.");
+        nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la definición del tamaño."));
+        return nodo;
     }
 
     /* expresionMatriz → '[' listaFilas ']' */
-    private void expresionMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol expresionMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("expresionMatriz");
 
         switch (tokenActual().getTipo()) {
 
             case CORCHETE_IZQ:
                 // Matriz literal
-                match(TipoToken.CORCHETE_IZQ, "Se espera '[' para iniciar la matriz.");
-                listaFilas();
-                match(TipoToken.CORCHETE_DER, "Se espera ']' para cerrar la matriz.");
+                nodo.agregarHijo(match(TipoToken.CORCHETE_IZQ, "Se espera '[' para iniciar la matriz."));
+                nodo.agregarHijo(listaFilas());
+                nodo.agregarHijo(match(TipoToken.CORCHETE_DER, "Se espera ']' para cerrar la matriz."));
                 validacionFin(TipoToken.CORCHETE_IZQ,TipoToken.CORCHETE_DER,
                 "Sobra un CORCHETE de inicio '[' al final de la declaración de la MATRIZ.",
                 "Sobra un CORCHETE de cierre ']' al final de la declaración de la MATRIZ.");
                 break;
 
             case IDENTIFICADOR:
-                // Operaciones entre matrices
-                expresionOperacionMatriz();
+                nodo.agregarHijo(expresionOperacionMatriz());
                 break;
-
+            case PR_TRANSPUESTA:
+            case PR_INVERSA:
+            case PR_ADJUNTA:
+            case PR_COFACTORES:
+            case PR_GAUSS:
+            case PR_GAUSSJ:
+                nodo.agregarHijo(operacionEspecial());
+                break;
+            
             default:
                 errores.agregarError(
                     450,
@@ -905,14 +1053,16 @@ tamañoMatriz()
                 );
                 panico();
         }
+        return nodo;
     }
 
 
-    private void listaFilas() {
-        if (panicoUsado) return;
-        filaMatriz();
+    private NodoArbol listaFilas() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("listaFilas");
+        nodo.agregarHijo(filaMatriz());
         if(tokenActual().getTipo() != TipoToken.COMA){
-            if(panicoUsado) return;
+            if(panicoUsado) return null;
             errores.agregarError(
                     401,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
@@ -920,38 +1070,45 @@ tamañoMatriz()
                 );
             panico();
         }
-        match(TipoToken.COMA, "Se espera ',' para separar las filas de la matriz.");
+        nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar las filas de la matriz."));
         validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
         
-        filaMatriz();
+        nodo.agregarHijo(filaMatriz());
         
-        restoFilas();
+        nodo.agregarHijo(restoFilas());
+        return nodo;
     }
 
-    private void restoFilas() {
-        if (panicoUsado) return;
+    private NodoArbol restoFilas() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.COMA) {
-            match(TipoToken.COMA, "Se espera ',' para separar filas.");
+            NodoArbol nodo = new NodoArbol("restoFilas");
+            nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar filas."));
             validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
 
-            filaMatriz();
-            restoFilas();
+            nodo.agregarHijo(filaMatriz());
+            nodo.agregarHijo(restoFilas());
+            return nodo;
         }
+        return null;
     }
 
-    private void filaMatriz() {
-        if (panicoUsado) return;
-        match(TipoToken.CORCHETE_IZQ, "Se espera '[' para iniciar una fila de la matriz.");
-        listaElementosFila();
-        match(TipoToken.CORCHETE_DER, "Se espera ']' para cerrar la fila de la matriz.");
+    private NodoArbol filaMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("filaMatriz");
+        nodo.agregarHijo(match(TipoToken.CORCHETE_IZQ, "Se espera '[' para iniciar una fila de la matriz."));
+        nodo.agregarHijo(listaElementosFila());
+        nodo.agregarHijo(match(TipoToken.CORCHETE_DER, "Se espera ']' para cerrar la fila de la matriz."));
+        return nodo;
     }
 
-    private void listaElementosFila() {
-        if (panicoUsado) return;
-        expresionNumerica();
+    private NodoArbol listaElementosFila() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("listaElementosFila");
+        nodo.agregarHijo(expresionNumerica());
         if(tokenActual().getTipo() != TipoToken.COMA){
-            if(panicoUsado) return;
+            if(panicoUsado) return null;
             errores.agregarError(
                     401,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
@@ -959,82 +1116,323 @@ tamañoMatriz()
                 );
             panico();
         }
-        match(TipoToken.COMA, "Se espera ',' para separar los elementos de la fila.");
+        nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar los elementos de la fila."));
         validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
         
-        expresionNumerica();
-        restoElementosFila();
+        nodo.agregarHijo(expresionNumerica());
+        nodo.agregarHijo(restoElementosFila());
+        return nodo;
     }
 
-    private void restoElementosFila() {
-        if (panicoUsado) return;
+    private NodoArbol restoElementosFila() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.COMA) {
-            match(TipoToken.COMA, "Se espera ',' para separar los elementos de la fila.");
+            NodoArbol nodo = new NodoArbol("restoElementosFila");
+            nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar los elementos de la fila."));
             validarDobleComa("La separación de los elementos debe estar dada por solo una coma ','.");
 
-            expresionNumerica();
-            restoElementosFila();
+            nodo.agregarHijo(expresionNumerica());
+            nodo.agregarHijo(restoElementosFila());
+            return nodo;
         }
+        return null;
     }
     
     
     /* expresionOperacionMatriz → terminoMatriz continuacionSumaRestaMatriz */
-    private void expresionOperacionMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol expresionOperacionMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("expresionOperacionMatriz");
 
-        terminoMatriz();
-        continuacionSumaRestaMatriz();
+        nodo.agregarHijo(terminoMatriz());
+        nodo.agregarHijo(continuacionSumaRestaMatriz());
+        return nodo;
     }
     
     /* terminoMatriz → IDENTIFICADOR continuacionMultDivMatriz */
-    private void terminoMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol terminoMatriz() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("terminoMatriz");
 
-        match(
+        nodo.agregarHijo(match(
             TipoToken.IDENTIFICADOR,
             "Se esperaba el identificador de una matriz."
-        );
+        ));
 
-        continuacionMultDivMatriz();
+        nodo.agregarHijo(continuacionMultDivMatriz());
+        return nodo;
     }
     /* continuacionSumaRestaMatriz → ('+'|'-') terminoMatriz continuacionSumaRestaMatriz | ε */
-    private void continuacionSumaRestaMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol continuacionSumaRestaMatriz() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.OP_SUMA ||
             tokenActual().getTipo() == TipoToken.OP_RESTA) {
+            
+            NodoArbol nodo = new NodoArbol("continuacionSumaRestaMatriz");
 
-            match(
+            nodo.agregarHijo(match(
                 tokenActual().getTipo(),
                 "Se esperaba un operador '+' o '-' para operar matrices."
-            );
+            ));
 
-            match(
+            nodo.agregarHijo(match(
                 TipoToken.IDENTIFICADOR,
                 "La suma o resta de matrices solo se permite entre matrices."
-            );
+            ));
 
-            continuacionSumaRestaMatriz();
+            nodo.agregarHijo(continuacionSumaRestaMatriz());
+            return nodo;
         }
+        return null;
     }
     
     /* continuacionMultDivMatriz → ('*'|'/') expresionNumerica | ε */
-    private void continuacionMultDivMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol continuacionMultDivMatriz() {
+        if (panicoUsado) return null;
 
         if (tokenActual().getTipo() == TipoToken.OP_MULT ||
             tokenActual().getTipo() == TipoToken.OP_DIV) {
+            
+            NodoArbol nodo = new NodoArbol("continuacionMultDivMatriz");
 
-            match(
+            nodo.agregarHijo(match(
                 tokenActual().getTipo(),
                 "Se esperaba '*' o '/' para operar la matriz con un escalar."
-            );
+            ));
 
-            expresionNumerica(); // SOLO escalar
+            nodo.agregarHijo(expresionNumerica()); // SOLO escalar
+            return nodo;
         }
+        return null;
+    }
+    
+ //-----------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------PROCEDIMIENTOS NUMÉRICOS CON MATRICES---------------------------------------------------
+/*
+propiedadNumerica()
+    → RANGO '(' IDENTIFICADOR ')'
+    | DETERMINANTE '(' IDENTIFICADOR ')' 
+    | DETERMINANTE '(' IDENTIFICADOR ')' METODO metodoDeterminante()
+
+metodoDeterminante()
+    → COFACTORES
+    | GAUSS
+*/
+    private NodoArbol propiedadNumerica() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("propiedadNumerica");
+
+        switch (tokenActual().getTipo()) {
+
+            case PR_RANGO:
+                nodo.agregarHijo(match(TipoToken.PR_RANGO, "Se esperaba la palabra reservada 'RANGO'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'RANGO'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz sobre la cual se calcula el rango."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la llamada a 'RANGO'."));
+                break;
+
+            case PR_DETERMINANTE:
+                nodo.agregarHijo(match(TipoToken.PR_DETERMINANTE, "Se esperaba la palabra reservada 'DETERMINANTE'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'DETERMINANTE'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el identificador de la matriz sobre la cual se calcula el determinante."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar la llamada a 'DETERMINANTE'."));
+
+                if (tokenActual().getTipo() == TipoToken.PR_METODO) {
+                    nodo.agregarHijo(match(TipoToken.PR_METODO, "Se esperaba la palabra reservada 'METODO' para especificar el método de determinante."));
+                    switch (tokenActual().getTipo()) {
+                        case PR_COFACTORES:
+                            nodo.agregarHijo(match(TipoToken.PR_COFACTORES, "Se esperaba el método 'COFACTORES' para calcular el determinante."));
+                            break;
+                        case PR_GAUSS:
+                            nodo.agregarHijo(match(TipoToken.PR_GAUSS, "Se esperaba el método 'GAUSS' para calcular el determinante."));
+                            break;
+                        default:
+                            errores.agregarError(
+                                460,
+                                tokenActual().getLinea(),
+                                "Método de determinante inválido. Se esperaba COFACTORES, GAUSS o SARRUS."
+                            );
+                            panico();
+                            return null;
+                    }
+                }
+                break;
+
+            default:
+                errores.agregarError(
+                    461,
+                    tokenActual().getLinea(),
+                    "Se esperaba una propiedad numérica de matriz: RANGO o DETERMINANTE."
+                );
+                panico();
+        }
+        return nodo;
+    }
+ //-----------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------OPERACIONES CON VECTORES----------------------------------------------------------------
+/* operacionVector() → PR_PPUNTO '(' IDENTIFICADOR ',' IDENTIFICADOR ')' 
+                    | PR_CRUZ   '(' IDENTIFICADOR ',' IDENTIFICADOR ')' 
+                    | PR_NORMALIZAR '(' IDENTIFICADOR ')' 
+                    | PR_MAGNITUD '(' IDENTIFICADOR ')' */
+    private NodoArbol operacionVector() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("operacionVector");
+
+        switch (tokenActual().getTipo()) {
+
+            case PR_PPUNTO:
+                nodo.agregarHijo(match(TipoToken.PR_PPUNTO, "Se esperaba la palabra reservada 'PPUNTO'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'PPUNTO'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el primer vector en PPUNTO."));
+                nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar los vectores en PPUNTO."));
+                validarDobleComa("La separación de los vectores debe darse con solo una coma ','.");
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el segundo vector en PPUNTO."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar PPUNTO."));
+                break;
+
+            case PR_CRUZ:
+                nodo.agregarHijo(match(TipoToken.PR_CRUZ, "Se esperaba la palabra reservada 'CRUZ'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'CRUZ'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el primer vector en CRUZ."));
+                nodo.agregarHijo(match(TipoToken.COMA, "Se espera ',' para separar los vectores en CRUZ."));
+                validarDobleComa("La separación de los vectores debe darse con solo una coma ','.");
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera el segundo vector en CRUZ."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar CRUZ."));
+                break;
+
+            case PR_NORMALIZAR:
+                nodo.agregarHijo(match(TipoToken.PR_NORMALIZAR, "Se esperaba la palabra reservada 'NORMALIZAR'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'NORMALIZAR'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera un vector válido para NORMALIZAR."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar NORMALIZAR."));
+                break;
+
+            case PR_MAGNITUD:
+                nodo.agregarHijo(match(TipoToken.PR_MAGNITUD, "Se esperaba la palabra reservada 'MAGNITUD'."));
+                nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se espera '(' después de 'MAGNITUD'."));
+                nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, "Se espera un vector válido para MAGNITUD."));
+                nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se espera ')' para cerrar MAGNITUD."));
+                break;
+
+            default:
+                errores.agregarError(
+                    500,
+                    lFinal ? lineaFinal : tokenActual().getLinea(),
+                    "Se esperaba una operación válida de vector (PPUNTO, CRUZ, NORMALIZAR, MAGNITUD), pero se encontró: '" 
+                    + tokenActual().getLexema() + "'."
+                );
+                panico();
+        }
+        return nodo;
+    }
+//-------------------------------------------- ------------------------------------------------------------
+// -------------------------------------MÉTODO MOSTRAR----------------------------------------------------
+/*
+GRAMÁTICA UTILIZADA:
+prMostrar() → expresionCadena() | accion() ';'
+    accion() → 
+            PROCEDIMIENTO  propiedadNumerica()
+            | PROCEDIMIENTO operacionEspecial()
+            | PROCEDIMIENTO operacionVector()
+            | propiedadNumerica()
+            | operacionEspecial()
+            | operacionVector()
+*/
+    private NodoArbol prMostrar() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("prMostrar");
+
+        nodo.agregarHijo(match(TipoToken.PR_MOSTRAR, "Se espera la palabra reservada 'MOSTRAR' para iniciar una instrucción de visualización."));
+
+        switch (tokenActual().getTipo()) {
+            case CADENA:
+            case IDENTIFICADOR:
+            case PARENT_IZQ:
+                nodo.agregarHijo(expresionCadena());
+                break;
+
+            case PR_PROCEDIMIENTO:
+            case PR_RANGO:
+            case PR_DETERMINANTE:
+            case PR_TRANSPUESTA:
+            case PR_INVERSA:
+            case PR_ADJUNTA:
+            case PR_COFACTORES:
+            case PR_GAUSS:
+            case PR_GAUSSJ:
+            case PR_PPUNTO:
+            case PR_CRUZ:
+            case PR_NORMALIZAR:
+            case PR_MAGNITUD:
+                nodo.agregarHijo(accion());
+                break;
+
+            default:
+                errores.agregarError(
+                    450,
+                    tokenActual().getLinea(),
+                    "Se esperaba una cadena literal, un identificador, una expresión entre paréntesis, o una acción válida (propiedad numérica, operación especial o operación vectorial)."
+                );
+                panico();
+                return null;
+        }
+        
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, "Se espera ';' al final de la instrucción MOSTRAR."));
+        return nodo;
     }
 
+
+    private NodoArbol accion() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("accion");
+
+        boolean procedimiento = false;
+
+        if (tokenActual().getTipo() == TipoToken.PR_PROCEDIMIENTO) {
+            procedimiento = true;
+            nodo.agregarHijo(match(TipoToken.PR_PROCEDIMIENTO, "Se esperaba la palabra reservada 'PROCEDIMIENTO' antes de la acción."));
+        }
+
+        switch (tokenActual().getTipo()) {
+            case PR_RANGO:
+            case PR_DETERMINANTE:
+                nodo.agregarHijo(propiedadNumerica());
+                break;
+
+            case PR_TRANSPUESTA:
+            case PR_INVERSA:
+            case PR_ADJUNTA:
+            case PR_COFACTORES:
+            case PR_GAUSS:
+            case PR_GAUSSJ:
+                nodo.agregarHijo(operacionEspecial());
+                break;
+
+            case PR_PPUNTO:
+            case PR_CRUZ:
+            case PR_NORMALIZAR:
+            case PR_MAGNITUD:
+                nodo.agregarHijo(operacionVector());
+                break;
+
+            default:
+                errores.agregarError(
+                    500,
+                    tokenActual().getLinea(),
+                    "Se esperaba una propiedad numérica (RANGO, DETERMINANTE), una operación especial de matriz (TRANSPUESTA, INVERSA, ADJUNTA, COFACTORES, GAUSS, GAUSSJ), o "
+                            + "una operación vectorial después" 
+                    + (procedimiento ? " de 'PROCEDIMIENTO'." : "de MOSTRAR. Otra opción también sería ingresar una cadena después de MOSTRAR.")
+                );
+                panico();
+                return null;
+        }
+        return nodo;
+    }
+
+    
+    
 //------------------------------------------------------------------------------------------------------
 // ---------------------------------MODIFICAR MATRIZ----------------------------------------------------    
 /*
@@ -1057,35 +1455,33 @@ eliminarFilaColumna() → ELIMINAR tipoFilaColumna expresionNumerica()
 reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVector()
 */   
 
-    private void prModificar() {
-        match(TipoToken.PR_MODIFICAR, 
-            "Se espera la palabra reservada 'MODIFICAR'.");
-        match(TipoToken.IDENTIFICADOR, 
-            "Se espera el identificador de la matriz a modificar.");
-        accionMatriz();
+    private NodoArbol prModificar() {
+        NodoArbol nodo = new NodoArbol("prModificar");
+        nodo.agregarHijo(match(TipoToken.PR_MODIFICAR, 
+            "Se espera la palabra reservada 'MODIFICAR'."));
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, 
+            "Se espera el identificador de la matriz a modificar."));
+        nodo.agregarHijo(accionMatriz());
+        return nodo;
     }
 
     /* accionMatriz → cambiarCelda | agregar | eliminar | reemplazar */
-    private void accionMatriz() {
-        if (panicoUsado) return;
+    private NodoArbol accionMatriz() {
+        if (panicoUsado) return null;
 
         switch (tokenActual().getTipo()) {
             case PR_CELDA:
-                cambiarCelda();
-                break;
+                return cambiarCelda();
 
             case PR_AGREGAR:
-                agregarFilaColumna();
-                break;
+                return agregarFilaColumna();
 
             case PR_ELIMINAR:
-                eliminarFilaColumna();
-                break;
+                return eliminarFilaColumna();
 
             case PR_FILA:
             case PR_COLUMNA:
-                reemplazarFilaColumna();
-                break;
+                return reemplazarFilaColumna();
 
             default:
                 errores.agregarError(
@@ -1096,6 +1492,7 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
                     + "o reemplazo de FILA/COLUMNA."
                 );
                 panico();
+                return null;
         }
     }
 
@@ -1103,42 +1500,45 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
        CAMBIAR UNA CELDA
        =============================== */
 /* CELDA '(' fila ',' columna ')' '=' expresionNumerica ';' */
-    private void cambiarCelda() {
-        if (panicoUsado) return;
+    private NodoArbol cambiarCelda() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("cambiarCelda");
 
-        match(TipoToken.PR_CELDA, 
-            "Se espera la palabra reservada 'CELDA'.");
-        match(TipoToken.PARENT_IZQ, 
-            "Se espera '(' después de CELDA.");
+        nodo.agregarHijo(match(TipoToken.PR_CELDA, 
+            "Se espera la palabra reservada 'CELDA'."));
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ, 
+            "Se espera '(' después de CELDA."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.COMA, 
-            "Se espera ',' para separar fila y columna.");
+        nodo.agregarHijo(match(TipoToken.COMA, 
+            "Se espera ',' para separar fila y columna."));
         validarDobleComa("La separación de la celda debe tener solo una coma ','.");
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PARENT_DER, 
-            "Se espera ')' para cerrar la celda.");
-        match(TipoToken.ASIGNACION, 
-            "Se espera '=' para asignar el nuevo valor a la celda.");
+        nodo.agregarHijo(match(TipoToken.PARENT_DER, 
+            "Se espera ')' para cerrar la celda."));
+        nodo.agregarHijo(match(TipoToken.ASIGNACION, 
+            "Se espera '=' para asignar el nuevo valor a la celda."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PUNTO_Y_COMA, 
-            "Se espera ';' al final de la modificación de la celda.");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, 
+            "Se espera ';' al final de la modificación de la celda."));
+        return nodo;
     }
 
     /* ===============================
        AGREGAR FILA / COLUMNA
        =============================== */
     /* AGREGAR (FILA | COLUMNA) expresionVector ';' */
-    private void agregarFilaColumna() {
-        if (panicoUsado) return;
+    private NodoArbol agregarFilaColumna() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("agregarFilaColumna");
 
-        match(TipoToken.PR_AGREGAR, 
-            "Se espera la palabra reservada 'AGREGAR'.");
+        nodo.agregarHijo(match(TipoToken.PR_AGREGAR, 
+            "Se espera la palabra reservada 'AGREGAR'."));
 
         if (tokenActual().getTipo() != TipoToken.PR_FILA &&
             tokenActual().getTipo() != TipoToken.PR_COLUMNA) {
@@ -1149,27 +1549,29 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
                 "Después de AGREGAR se espera FILA o COLUMNA."
             );
             panico();
-            return;
+            return null;
         }
 
-        match(tokenActual().getTipo(),
-            "Se espera FILA o COLUMNA.");
+        nodo.agregarHijo(match(tokenActual().getTipo(),
+            "Se espera FILA o COLUMNA."));
 
-        expresionVector();
+        nodo.agregarHijo(expresionVector());
 
-        match(TipoToken.PUNTO_Y_COMA,
-            "Se espera ';' al final de la instrucción AGREGAR.");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA,
+            "Se espera ';' al final de la instrucción AGREGAR."));
+        return nodo;
     }
 
     /* ===============================
        ELIMINAR FILA / COLUMNA
        =============================== */
     /* ELIMINAR (FILA | COLUMNA) expresionNumerica ';' */
-    private void eliminarFilaColumna() {
-        if (panicoUsado) return;
+    private NodoArbol eliminarFilaColumna() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("eliminarFilaColumna");
 
-        match(TipoToken.PR_ELIMINAR,
-            "Se espera la palabra reservada 'ELIMINAR'.");
+        nodo.agregarHijo(match(TipoToken.PR_ELIMINAR,
+            "Se espera la palabra reservada 'ELIMINAR'."));
 
         if (tokenActual().getTipo() != TipoToken.PR_FILA &&
             tokenActual().getTipo() != TipoToken.PR_COLUMNA) {
@@ -1180,37 +1582,40 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
                 "Después de ELIMINAR se espera FILA o COLUMNA."
             );
             panico();
-            return;
+            return null;
         }
 
-        match(tokenActual().getTipo(),
-            "Se espera FILA o COLUMNA.");
+        nodo.agregarHijo(match(tokenActual().getTipo(),
+            "Se espera FILA o COLUMNA."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PUNTO_Y_COMA,
-            "Se espera ';' al final de la instrucción ELIMINAR.");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA,
+            "Se espera ';' al final de la instrucción ELIMINAR."));
+        return nodo;
     }
 
     /* ===============================
        REEMPLAZAR FILA / COLUMNA
        =============================== */
     /* (FILA | COLUMNA) expresionNumerica '=' expresionVector ';' */
-    private void reemplazarFilaColumna() {
-        if (panicoUsado) return;
+    private NodoArbol reemplazarFilaColumna() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("reemplazarFilaColumna");
 
-        match(tokenActual().getTipo(),
-            "Se espera FILA o COLUMNA.");
+        nodo.agregarHijo(match(tokenActual().getTipo(),
+            "Se espera FILA o COLUMNA."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.ASIGNACION,
-            "Se espera '=' para asignar la nueva fila o columna.");
+        nodo.agregarHijo(match(TipoToken.ASIGNACION,
+            "Se espera '=' para asignar la nueva fila o columna."));
 
-        expresionVector();
+        nodo.agregarHijo(expresionVector());
 
-        match(TipoToken.PUNTO_Y_COMA,
-            "Se espera ';' al final del reemplazo.");
+        nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA,
+            "Se espera ';' al final del reemplazo."));
+        return nodo;
     }
     
     
@@ -1231,32 +1636,35 @@ obtenerFila() → FILA expresionNumerica() DE IDENTIFICADOR
 obtenerColumna() → COLUMNA expresionNumerica() DE IDENTIFICADOR
 */
 
-    private void prObtener() {
-        match(TipoToken.PR_OBTENER, 
-            "Se espera la palabra reservada 'OBTENER'.");
-        definicionObtener();
+    private NodoArbol prObtener() {
+        NodoArbol nodo = new NodoArbol("prObtener");
+        nodo.agregarHijo(match(TipoToken.PR_OBTENER, 
+            "Se espera la palabra reservada 'OBTENER'."));
+        nodo.agregarHijo(definicionObtener());
+        return nodo;
     }
 
-    private void definicionObtener() {
-        if (panicoUsado) return;
+    private NodoArbol definicionObtener() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("definicionObtener");
 
         switch (tokenActual().getTipo()) {
             case PR_CELDA:
-                obtenerCelda();
-                match(TipoToken.PUNTO_Y_COMA, 
-                "Se espera ';' al final de la instrucción OBTENER CELDA.");
+                nodo.agregarHijo(obtenerCelda());
+                nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, 
+                "Se espera ';' al final de la instrucción OBTENER CELDA."));
                 break;
 
             case PR_FILA:
-                obtenerFila();
-                match(TipoToken.PUNTO_Y_COMA, 
-                "Se espera ';' al final de la instrucción OBTENER FILA.");
+                nodo.agregarHijo(obtenerFila());
+                nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, 
+                "Se espera ';' al final de la instrucción OBTENER FILA."));
                 break;
 
             case PR_COLUMNA:
-                obtenerColumna();
-                match(TipoToken.PUNTO_Y_COMA, 
-                "Se espera ';' al final de la instrucción OBTENER COLUMNA.");
+                nodo.agregarHijo(obtenerColumna());
+                nodo.agregarHijo(match(TipoToken.PUNTO_Y_COMA, 
+                "Se espera ';' al final de la instrucción OBTENER COLUMNA."));
                 break;
 
             default:
@@ -1267,75 +1675,204 @@ obtenerColumna() → COLUMNA expresionNumerica() DE IDENTIFICADOR
                 );
                 panico();
         }
+        return nodo;
     }
 
-    private void obtenerCelda() {
-        if (panicoUsado) return;
+    private NodoArbol obtenerCelda() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("obtenerCelda");
 
-        match(TipoToken.PR_CELDA, 
-            "Se espera la palabra reservada 'CELDA'.");
-        match(TipoToken.PARENT_IZQ, 
-            "Se espera '(' después de CELDA.");
+        nodo.agregarHijo(match(TipoToken.PR_CELDA, 
+            "Se espera la palabra reservada 'CELDA'."));
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ, 
+            "Se espera '(' después de CELDA."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.COMA, 
-            "Se espera ',' para separar fila y columna.");
+        nodo.agregarHijo(match(TipoToken.COMA, 
+            "Se espera ',' para separar fila y columna."));
         validarDobleComa(
             "La separación de la fila y columna debe estar dada por una sola coma ','."
         );
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PARENT_DER, 
-            "Se espera ')' para cerrar la definición de la celda.");
+        nodo.agregarHijo(match(TipoToken.PARENT_DER, 
+            "Se espera ')' para cerrar la definición de la celda."));
 
-        match(TipoToken.PR_DE, 
-            "Se espera la palabra reservada 'DE' después de CELDA(fila,columna).");
+        nodo.agregarHijo(match(TipoToken.PR_DE, 
+            "Se espera la palabra reservada 'DE' después de CELDA(fila,columna)."));
 
-        match(TipoToken.IDENTIFICADOR, 
-            "Se espera el identificador de la matriz de la cual se desea obtener la celda.");
-
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, 
+            "Se espera el identificador de la matriz de la cual se desea obtener la celda."));
+        return nodo;
     }
 
-    private void obtenerFila() {
-        if (panicoUsado) return;
+    private NodoArbol obtenerFila() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("obtenerFila");
 
-        match(TipoToken.PR_FILA, 
-            "Se espera la palabra reservada 'FILA'.");
+        nodo.agregarHijo(match(TipoToken.PR_FILA, 
+            "Se espera la palabra reservada 'FILA'."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PR_DE, 
-            "Se espera la palabra reservada 'DE' después del número de fila.");
+        nodo.agregarHijo(match(TipoToken.PR_DE, 
+            "Se espera la palabra reservada 'DE' después del número de fila."));
 
-        match(TipoToken.IDENTIFICADOR, 
-            "Se espera el identificador de la matriz de la cual se desea obtener la fila.");
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, 
+            "Se espera el identificador de la matriz de la cual se desea obtener la fila."));
+        return nodo;
     }
 
-    private void obtenerColumna() {
-        if (panicoUsado) return;
+    private NodoArbol obtenerColumna() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("obtenerColumna");
 
-        match(TipoToken.PR_COLUMNA, 
-            "Se espera la palabra reservada 'COLUMNA'.");
+        nodo.agregarHijo(match(TipoToken.PR_COLUMNA, 
+            "Se espera la palabra reservada 'COLUMNA'."));
 
-        expresionNumerica();
+        nodo.agregarHijo(expresionNumerica());
 
-        match(TipoToken.PR_DE, 
-            "Se espera la palabra reservada 'DE' después del número de columna.");
+        nodo.agregarHijo(match(TipoToken.PR_DE, 
+            "Se espera la palabra reservada 'DE' después del número de columna."));
 
-        match(TipoToken.IDENTIFICADOR, 
-            "Se espera el identificador de la matriz de la cual se desea obtener la columna.");
+        nodo.agregarHijo(match(TipoToken.IDENTIFICADOR, 
+            "Se espera el identificador de la matriz de la cual se desea obtener la columna."));
+        return nodo;
     }  
-//------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------- 
+//------------------------------------------------------------------------------------------------------------
+// -----------------------------------------CONDICIONALES----------------------------------------------------- 
+/* condicional() → SI '(' condicion() ')' ENTONCES inicio() bloqueSino() FIN_SI
+
+bloqueSino() → SINO inicio() | ε
+
+condicion() → expresionComparativa()
+
+expresionComparativa() → operandoNumerico() operadorComparacion() operandoNumerico()
+                       | operandoCadena() operadorComparacion() operandoCadena()
+
+operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
     
-    
-    
-    
-    
-    
-    
+*/   
+    private NodoArbol condicional() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("condicional");
+
+        nodo.agregarHijo(match(TipoToken.PR_SI, "Se esperaba la palabra reservada 'SI' para iniciar un condicional."));
+
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se esperaba '(' después de 'SI' para abrir la condición."));
+        nodo.agregarHijo(condicion());
+        
+        nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se esperaba ')' para cerrar la condición."));
+
+        nodo.agregarHijo(match(TipoToken.PR_ENTONCES, "Se esperaba 'ENTONCES' después de la condición."));
+        
+        // Analiza el bloque verdadero
+        nodo.agregarHijo(inicioSinWhile());
+        // Esto para permitir condicionales anidados
+        while(tokenActual().getTipo() == TipoToken.PR_CREAR ||
+              tokenActual().getTipo() == TipoToken.PR_MODIFICAR ||
+              tokenActual().getTipo() == TipoToken.PR_MOSTRAR ||
+              tokenActual().getTipo() == TipoToken.PR_OBTENER ||
+              tokenActual().getTipo() == TipoToken.PR_SI ){
+              nodo.agregarHijo(inicioSinWhile());
+        }
+        nodo.agregarHijo(bloqueSino());
+        while(tokenActual().getTipo() == TipoToken.PR_CREAR ||
+              tokenActual().getTipo() == TipoToken.PR_MODIFICAR ||
+              tokenActual().getTipo() == TipoToken.PR_MOSTRAR ||
+              tokenActual().getTipo() == TipoToken.PR_OBTENER ||
+              tokenActual().getTipo() == TipoToken.PR_SI ){
+              nodo.agregarHijo(inicioSinWhile());
+        }
+        nodo.agregarHijo(match(TipoToken.PR_FIN_SI, "Se esperaba 'FIN_SI' para cerrar el condicional."));
+        return nodo;
+    }
+
+    private NodoArbol bloqueSino() {
+        if (panicoUsado) return null;
+
+        if (tokenActual().getTipo() == TipoToken.PR_SINO) {
+            NodoArbol nodo = new NodoArbol("bloqueSino");
+            nodo.agregarHijo(match(TipoToken.PR_SINO, "Se esperaba la palabra reservada 'SINO'.")); 
+            nodo.agregarHijo(inicioSinWhile());
+            return nodo;
+        }
+        return null;
+    }
+
+    private NodoArbol condicion() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("condicion");
+
+        switch (tokenActual().getTipo()) {
+            case NUMERO_REAL:
+            case IDENTIFICADOR:
+            case PARENT_IZQ:
+                nodo.agregarHijo(operandoNumerico());
+                break;
+            case CADENA:
+                nodo.agregarHijo(operandoCadena());
+                break;
+            default:
+                errores.agregarError(
+                    500,
+                    tokenActual().getLinea(),
+                    "Se esperaba un operando numérico o cadena para la condición, pero se encontró: '" + tokenActual().getLexema() + "'."
+                );
+                panico();
+                return null;
+        }
+
+        nodo.agregarHijo(operadorComparacion());
+
+        switch (tokenActual().getTipo()) { 
+            case NUMERO_REAL:
+            case IDENTIFICADOR:
+            case PARENT_IZQ:
+                
+                nodo.agregarHijo(operandoNumerico());
+                
+                break;
+            case CADENA:
+                nodo.agregarHijo(operandoCadena());
+                break;
+            default:
+                errores.agregarError(
+                    501,
+                    tokenActual().getLinea(),
+                    "Se esperaba un segundo operando numérico o cadena para la condición, pero se encontró: '" + tokenActual().getLexema() + "'."
+                );
+                panico();
+        }
+        return nodo;
+    }
+
+    private NodoArbol operadorComparacion() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("operadorComparacion");
+
+        switch (tokenActual().getTipo()) {
+            case OP_IGUAL:      // '=='
+            case OP_DIFERENTE:   // '!='
+            case OP_MAYOR:      // '>'
+            case OP_MENOR:      // '<'
+            case OP_MAYOR_IGUAL:// '>='
+            case OP_MENOR_IGUAL:// '<='
+                nodo.agregarHijo(match(tokenActual().getTipo(), "Se esperaba un operador de comparación válido (==, !=, >, <, >=, <=)."));
+                break;
+            default:
+                errores.agregarError(
+                    502,
+                    tokenActual().getLinea(),
+                    "Se esperaba un operador de comparación (==, !=, >, <, >=, <=) en la condición, pero se encontró: '" + tokenActual().getLexema() + "'."
+                );
+                panico();
+        }
+        return nodo;
+    }
+
     
     
     
@@ -1378,4 +1915,3 @@ obtenerColumna() → COLUMNA expresionNumerica() DE IDENTIFICADOR
     }
     
 }
-

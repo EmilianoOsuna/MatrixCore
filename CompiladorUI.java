@@ -11,7 +11,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,28 +21,37 @@ public class CompiladorUI extends JFrame {
 
     // --- COMPONENTES GLOBALES ---
     private JTextPane txtEntrada; 
-    private JTextArea txtResultadoSintactico;
+    
+    // Componentes para la zona inferior (Pestañas)
+    private JTabbedPane pestanasInferior;
+    private JTextArea txtConsola;
+    private JTable tblErroresLexicos;
+    private DefaultTableModel modeloErroresLexicos;
+    private JTable tblErroresSintacticos;
+    private DefaultTableModel modeloErroresSintacticos;
+
     private JTable tblTokens;
     private DefaultTableModel modeloTablaTokens;
 
     // Paneles Ocultables
     private JPanel pnlTabla;
-    private JScrollPane scrollSintactico;
     private JScrollPane scrollTabla;
 
     // Splits
     private JSplitPane splitSuperior;
     private JSplitPane splitPrincipal;
 
-    // Botones Toggle
+    // Botones
     private JToggleButton btnTokens;
     private JToggleButton btnConsola;
+    private JButton btnVerArbol; 
 
     // Estado lógico
     private boolean consolaVisible = false;
     private boolean tokensVisible = false; 
+    private NodoArbol raizActual = null; 
 
-    // Variables de Color Dinámicas (Cambian según el tema)
+    // Variables de Color Dinámicas
     private Color colorFondo;
     private Color colorTexto;
     private Color colorError;
@@ -54,20 +65,16 @@ public class CompiladorUI extends JFrame {
     private SimpleAttributeSet estiloComentario = new SimpleAttributeSet();
 
     public CompiladorUI() {
-        setTitle("Analizador Léxico y Sintáctico - IDE Profesional");
+        setTitle("Analizador Léxico y Sintáctico - MATRIX CORE");
         setSize(1100, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         
-        // Configuración inicial
         inicializarEstilosBase(); 
         crearMenu();
         inicializarComponentes();
-        
-        // Aplicamos el tema oscuro por defecto al iniciar
         aplicarTemaGlobal(true);
-        
         actualizarPaneles(); 
     }
 
@@ -76,71 +83,60 @@ public class CompiladorUI extends JFrame {
         StyleConstants.setItalic(estiloComentario, true);
     }
 
-    // --- MÉTODO MAESTRO DE TEMAS ---
     private void aplicarTemaGlobal(boolean modoOscuro) {
         if (modoOscuro) {
-            // --- PALETA MODO OSCURO (VS Code Dark) ---
             colorFondo = new Color(30, 30, 30);
             colorTexto = new Color(220, 220, 220);
-            colorError = new Color(255, 100, 100); // Rojo pastel (brillante)
-            colorExito = new Color(100, 255, 100); // Verde pastel (brillante)
+            colorError = new Color(255, 100, 100); 
+            colorExito = new Color(100, 255, 100); 
             
-            // Colores de Sintaxis
             StyleConstants.setForeground(estiloNormal, colorTexto);
             StyleConstants.setForeground(estiloPalabraReservada, new Color(197, 134, 192)); 
             StyleConstants.setForeground(estiloCadena, new Color(206, 145, 120)); 
             StyleConstants.setForeground(estiloNumero, new Color(181, 206, 168)); 
             StyleConstants.setForeground(estiloComentario, new Color(106, 153, 85)); 
-
         } else {
-            // --- PALETA MODO CLARO (Eclipse / NetBeans) ---
             colorFondo = Color.WHITE;
             colorTexto = Color.BLACK;
-            colorError = new Color(200, 0, 0);   // Rojo fuerte (oscuro)
-            colorExito = new Color(0, 128, 0);   // Verde fuerte (oscuro)
+            colorError = new Color(200, 0, 0);   
+            colorExito = new Color(0, 128, 0);   
 
-            // Colores de Sintaxis
             StyleConstants.setForeground(estiloNormal, colorTexto); 
-            StyleConstants.setForeground(estiloPalabraReservada, new Color(127, 0, 85)); // Morado Eclipse
-            StyleConstants.setForeground(estiloCadena, new Color(42, 0, 255)); // Azul
-            StyleConstants.setForeground(estiloNumero, new Color(0, 128, 0)); // Verde
-            StyleConstants.setForeground(estiloComentario, new Color(63, 127, 95)); // Gris Verdoso
+            StyleConstants.setForeground(estiloPalabraReservada, new Color(127, 0, 85)); 
+            StyleConstants.setForeground(estiloCadena, new Color(42, 0, 255)); 
+            StyleConstants.setForeground(estiloNumero, new Color(0, 128, 0)); 
+            StyleConstants.setForeground(estiloComentario, new Color(63, 127, 95)); 
         }
 
-        // --- APLICAR COLORES A LOS COMPONENTES ---
-        
-        // 1. Editor de Código
         txtEntrada.setBackground(colorFondo);
         txtEntrada.setCaretColor(modoOscuro ? Color.WHITE : Color.BLACK);
         
-        // 2. Consola de Salida
-        txtResultadoSintactico.setBackground(colorFondo);
-        // Si no hay texto de error/éxito actual, ponemos el normal
-        if (txtResultadoSintactico.getText().isEmpty()) {
-            txtResultadoSintactico.setForeground(colorTexto);
-        }
-
-        // 3. Tabla de Tokens
+        txtConsola.setBackground(colorFondo);
+        txtConsola.setForeground(colorTexto);
+        
         tblTokens.setBackground(colorFondo);
         tblTokens.setForeground(colorTexto);
         tblTokens.setGridColor(modoOscuro ? new Color(60, 60, 60) : Color.LIGHT_GRAY);
-        // Encabezado de la tabla (Truco para que se vea bien)
-        if (scrollTabla != null) {
-            scrollTabla.getViewport().setBackground(colorFondo);
-        }
+        
+        // Colores para tablas de errores
+        tblErroresLexicos.setBackground(colorFondo);
+        tblErroresLexicos.setForeground(colorError); // Rojo para errores léxicos
+        
+        tblErroresSintacticos.setBackground(colorFondo);
+        tblErroresSintacticos.setForeground(new Color(255, 165, 0)); // Naranja/Dorado para sintácticos
 
-        // Repintar sintaxis
+        if (scrollTabla != null) scrollTabla.getViewport().setBackground(colorFondo);
+
         pintarCodigo();
     }
 
     private void inicializarComponentes() {
-        // --- 1.1 Panel de Código ---
+        // --- 1. Panel de Código ---
         JPanel pnlCodigo = new JPanel(new BorderLayout());
         pnlCodigo.setBorder(BorderFactory.createTitledBorder("Código Fuente"));
         
         txtEntrada = new JTextPane();
         txtEntrada.setFont(new Font("Consolas", Font.PLAIN, 15));
-        txtEntrada.putClientProperty("JComponent.roundRect", true);
         
         ((AbstractDocument) txtEntrada.getDocument()).setDocumentFilter(new DocumentFilter() {
             @Override
@@ -161,43 +157,59 @@ public class CompiladorUI extends JFrame {
         try { scrollCodigo.setRowHeaderView(new TextLineNumber(txtEntrada)); } catch (Exception e) {}
         pnlCodigo.add(scrollCodigo, BorderLayout.CENTER);
 
-        // --- 1.2 Panel Tabla ---
+        // --- 2. Panel Tabla Tokens ---
         pnlTabla = new JPanel(new BorderLayout());
         pnlTabla.setBorder(BorderFactory.createTitledBorder("Tabla de Tokens"));
-        String[] columnas = {"Lexema", "Tipo de Token", "Línea"};
-        modeloTablaTokens = new DefaultTableModel(columnas, 0) {
+        String[] columnasTokens = {"Lexema", "Tipo de Token", "Línea"};
+        modeloTablaTokens = new DefaultTableModel(columnasTokens, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
         tblTokens = new JTable(modeloTablaTokens);
         tblTokens.setShowGrid(true);
         tblTokens.setFillsViewportHeight(true);
-        
-        scrollTabla = new JScrollPane(tblTokens); // Guardamos referencia para colorear fondo
+        scrollTabla = new JScrollPane(tblTokens); 
         pnlTabla.add(scrollTabla, BorderLayout.CENTER);
 
-        // --- 1.3 Panel Consola ---
-        txtResultadoSintactico = new JTextArea();
-        txtResultadoSintactico.setEditable(false);
-        txtResultadoSintactico.setFont(new Font("Consolas", Font.PLAIN, 13));
-        scrollSintactico = new JScrollPane(txtResultadoSintactico);
-        scrollSintactico.setBorder(BorderFactory.createTitledBorder("Salida / Errores Sintácticos"));
-        scrollSintactico.setMinimumSize(new Dimension(0, 100));
+        // --- 3. Panel Inferior (Pestañas de Errores y Consola) ---
+        pestanasInferior = new JTabbedPane();
+        
+        // Pestaña 1: Consola General
+        txtConsola = new JTextArea();
+        txtConsola.setEditable(false);
+        txtConsola.setFont(new Font("Consolas", Font.PLAIN, 13));
+        JScrollPane scrollConsola = new JScrollPane(txtConsola);
+        pestanasInferior.addTab("📜 Consola", scrollConsola);
 
-        // --- 2. Splits ---
+        // Pestaña 2: Tabla Errores Léxicos
+        String[] colsErr = {"Código Error", "Línea", "Descripción"};
+        modeloErroresLexicos = new DefaultTableModel(colsErr, 0);
+        tblErroresLexicos = new JTable(modeloErroresLexicos);
+        tblErroresLexicos.setShowGrid(true);
+        pestanasInferior.addTab("Errores Léxicos", new JScrollPane(tblErroresLexicos));
+
+        // Pestaña 3: Tabla Errores Sintácticos
+        modeloErroresSintacticos = new DefaultTableModel(colsErr, 0);
+        tblErroresSintacticos = new JTable(modeloErroresSintacticos);
+        tblErroresSintacticos.setShowGrid(true);
+        pestanasInferior.addTab("Errores Sintácticos", new JScrollPane(tblErroresSintacticos));
+        
+        pestanasInferior.setMinimumSize(new Dimension(0, 150));
+
+        // --- Splits ---
         splitSuperior = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitSuperior.setLeftComponent(pnlCodigo); 
-        splitSuperior.setResizeWeight(1.0); 
+        splitSuperior.setResizeWeight(0.7); 
         splitSuperior.setContinuousLayout(true);
         splitSuperior.setBorder(null);
 
         splitPrincipal = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPrincipal.setTopComponent(splitSuperior);
-        splitPrincipal.setResizeWeight(1.0); 
+        splitPrincipal.setResizeWeight(0.7); 
         splitPrincipal.setContinuousLayout(true);
 
         add(splitPrincipal, BorderLayout.CENTER);
 
-        // --- 3. Botones ---
+        // --- Botones ---
         JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         btnTokens = new JToggleButton("📊 Ver Tokens", false);
@@ -206,17 +218,23 @@ public class CompiladorUI extends JFrame {
             actualizarPaneles();
         });
 
-        btnConsola = new JToggleButton("📜 Ver Consola", false);
+        btnConsola = new JToggleButton("📜 Ver Resultados", false);
         btnConsola.addActionListener(e -> {
             consolaVisible = btnConsola.isSelected();
             actualizarPaneles();
+        });
+        
+        btnVerArbol = new JButton("🌳 Ver Árbol");
+        btnVerArbol.setEnabled(false); 
+        btnVerArbol.addActionListener(e -> {
+            if (raizActual != null) new VentanaArbol(raizActual).setVisible(true);
         });
 
         JButton btnLimpiar = new JButton("Limpiar");
         btnLimpiar.addActionListener(e -> limpiarInterfaz());
 
-        JButton btnAnalizar = new JButton("▶ ANALIZAR");
-        btnAnalizar.setBackground(new Color(0, 120, 215));
+        JButton btnAnalizar = new JButton("ANALIZAR");
+        btnAnalizar.setBackground(new Color(45, 216, 129));
         btnAnalizar.setForeground(Color.WHITE);
         btnAnalizar.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAnalizar.putClientProperty("JButton.buttonType", "roundRect");
@@ -228,18 +246,15 @@ public class CompiladorUI extends JFrame {
             actualizarPaneles();
         });
 
-        JButton btnTema = new JButton("🌗");
-        btnTema.setToolTipText("Cambiar Tema");
-        btnTema.addActionListener(e -> cambiarTema());
-
         pnlBotones.add(btnTokens);
         pnlBotones.add(Box.createHorizontalStrut(5));
         pnlBotones.add(btnConsola);
+        pnlBotones.add(Box.createHorizontalStrut(5));
+        pnlBotones.add(btnVerArbol);
         pnlBotones.add(Box.createHorizontalStrut(20));
         pnlBotones.add(btnLimpiar);
         pnlBotones.add(btnAnalizar);
         pnlBotones.add(Box.createHorizontalStrut(10));
-        pnlBotones.add(btnTema);
 
         add(pnlBotones, BorderLayout.SOUTH);
     }
@@ -252,7 +267,7 @@ public class CompiladorUI extends JFrame {
                 
                 doc.setCharacterAttributes(0, texto.length(), estiloNormal, true);
 
-                String regexKeywords = "\\b(CREAR|CADENA|NUM|VECTOR|MATRIZ|SI|SINO|FIN_SI|MOSTRAR|MODIFICAR|ELIMINAR|DETERMINANTE|INVERSA|TRANSPUESTA|ADJUNTA|COFACTORES|RANGO|SEN|COS|TAN|RAIZ|POTENCIA|LOG|LN|EXP|PI|LOG10|CELDA|CEROS|COLUMNA|CRUZ|DIAGONAL|AGREGAR)\\b";
+                String regexKeywords = "(?U)(?i)\\b(CREAR|CADENA|NUM|VECTOR|MATRIZ|SI|SINO|FIN_SI|TAMAÑO|MOSTRAR|MODIFICAR|ELIMINAR|DETERMINANTE|INVERSA|TRANSPUESTA|ADJUNTA|COFACTORES|RANGO|SEN|COS|TAN|RAIZ|POTENCIA|LOG|LN|EXP|PI|LOG10|CELDA|CEROS|COLUMNA|CRUZ|DIAGONAL|AGREGAR|METODO|DE)\\b";
                 String regexCadenas = "\"[^\"]*\"";
                 String regexNumeros = "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b";
                 String regexComentarios = "//.*|/\\*[\\s\\S]*?\\*/";
@@ -287,10 +302,10 @@ public class CompiladorUI extends JFrame {
         }
 
         if (consolaVisible) {
-            splitPrincipal.setBottomComponent(scrollSintactico);
+            splitPrincipal.setBottomComponent(pestanasInferior); // AHORA USAMOS LAS PESTAÑAS
             splitPrincipal.setDividerSize(10);
             if (splitPrincipal.getDividerLocation() == 0 || splitPrincipal.getDividerLocation() > getHeight() - 50) {
-                 splitPrincipal.setDividerLocation(0.75);
+                 splitPrincipal.setDividerLocation(0.70);
             }
         } else {
             splitPrincipal.setBottomComponent(null);
@@ -304,69 +319,121 @@ public class CompiladorUI extends JFrame {
         String codigoFuente = txtEntrada.getText();
         if (codigoFuente.trim().isEmpty()) return;
 
+        // 1. Limpiezas iniciales
         modeloTablaTokens.setRowCount(0);
-        txtResultadoSintactico.setText("");
+        modeloErroresLexicos.setRowCount(0);
+        modeloErroresSintacticos.setRowCount(0);
+        txtConsola.setText("");
+        raizActual = null; 
+        btnVerArbol.setEnabled(false);
 
         try {
+            // 2. Tokenización
             Token[] tokensCrudos = Proyecto_Final_Automatas1.tokenizador(codigoFuente);
             AFD afd = Proyecto_Final_Automatas1.obtenerAFD(); 
             List<Token> tokensAnalizados = afd.aceptar(tokensCrudos);
 
+            // 3. Llenar tabla de tokens y Tabla de Errores Léxicos
             for (Token tk : tokensAnalizados) {
                 modeloTablaTokens.addRow(new Object[]{tk.getLexema(), tk.getTipo(), tk.getLinea()});
             }
-
-            List<Token> tokensParaParser = new ArrayList<>();
-            for (Token tk : tokensAnalizados) {
-                if (tk.existeSimbolo()) tokensParaParser.add(tk);
-            }
-
-            ParserLL1 parser = new ParserLL1(tokensParaParser);
-            parser.inicio();
-
-            StringBuilder reporte = new StringBuilder();
-            if (parser.errores.hayErrores()) {
-                reporte.append("❌ ERRORES ENCONTRADOS:\n");
-                for (ErrorCompilacion err : parser.errores.getErrores()) {
-                    reporte.append(String.format("• Línea %d: %s\n", err.getLinea(), err.getDescripcion()));
+            
+            // OBTENER ERRORES LÉXICOS DEL AFD
+            Errores errLex = afd.getErrores();
+            if (errLex.hayErrores()) {
+                for (ErrorCompilacion err : errLex.getErrores()) {
+                    modeloErroresLexicos.addRow(new Object[]{err.getNumero(), err.getLinea(), err.getDescripcion()});
                 }
-                // AQUÍ USAMOS LA VARIABLE DINÁMICA DE COLOR
-                txtResultadoSintactico.setForeground(colorError); 
-            } else {
-                reporte.append("✅ COMPILACIÓN EXITOSA.\nNo se encontraron errores sintácticos.");
-                // AQUÍ USAMOS LA VARIABLE DINÁMICA DE COLOR
-                txtResultadoSintactico.setForeground(colorExito); 
+                pestanasInferior.setSelectedIndex(1); // Enfocar pestaña de errores léxicos
+                txtConsola.append("Se encontraron errores léxicos. Revisa la pestaña correspondiente.\n");
+                txtConsola.setForeground(colorError);
             }
-            txtResultadoSintactico.setText(reporte.toString());
+
+            // 4. Filtrar tokens válidos para el Parser
+           Set<Integer> lineasConError = new HashSet<>();
+            for (Token tk : tokensAnalizados) {
+                if (!tk.existeSimbolo()) {
+                    lineasConError.add(tk.getLinea());
+                }
+            }
+
+            // Preparar tokens para parser: solo líneas sin errores
+            List<Token> tokensParaParser = new ArrayList<>();
+            List<Token> tokensErrorLexico = new ArrayList<>();
+
+            for (Token tk : tokensAnalizados) {
+                if (lineasConError.contains(tk.getLinea())) { 
+                    // Toda la línea se omite del análisis sintáctico
+                    tokensErrorLexico.add(tk);
+                } else {
+                    tokensParaParser.add(tk);
+                }
+            }
+            
+            // 5. Análisis Sintáctico
+            if(tokensParaParser.size() < 1){
+                System.out.println("No hay ningún token válido como para realizar un análisis sintáctico");
+            }else{
+                ParserLL1 parser = new ParserLL1(tokensParaParser);
+                parser.inicio();
+
+                // 6. Llenar Tabla de Errores Sintácticos
+                if (parser.errores.hayErrores()) {
+                    for (ErrorCompilacion err : parser.errores.getErrores()) {
+                        modeloErroresSintacticos.addRow(new Object[]{err.getNumero(), err.getLinea(), err.getDescripcion()});
+                    }
+                    
+                    txtConsola.append("Se encontraron errores sintácticos.\n");
+                    if (!errLex.hayErrores()) {
+                        // Si no hubo errores léxicos pero sí sintácticos, enfocar sintácticos
+                        pestanasInferior.setSelectedIndex(2);
+                        txtConsola.setForeground(colorError);
+                    }
+                } else if (!errLex.hayErrores()) {
+                    // Si no hay errores de ningún tipo
+                    txtConsola.append("COMPILACIÓN EXITOSA.\nNo se encontraron errores.");
+                    txtConsola.setForeground(colorExito); 
+                    pestanasInferior.setSelectedIndex(0); // Enfocar consola
+                    
+                    // Generar Árbol
+                    raizActual = parser.getRaiz();
+                    if (raizActual != null) {
+                        btnVerArbol.setEnabled(true);
+                    }
+                }
+            }
+            
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            txtResultadoSintactico.setText("Error crítico: " + ex.getMessage());
+            txtConsola.setText("Error crítico: " + ex.getMessage());
         }
     }
 
     private void limpiarInterfaz() {
         txtEntrada.setText("");
         modeloTablaTokens.setRowCount(0);
-        txtResultadoSintactico.setText("");
-        tokensVisible = false; consolaVisible = false; btnTokens.setSelected(false); btnConsola.setSelected(false);
+        modeloErroresLexicos.setRowCount(0);
+        modeloErroresSintacticos.setRowCount(0);
+        txtConsola.setText("");
+        tokensVisible = false; consolaVisible = false; 
+        btnTokens.setSelected(false); btnConsola.setSelected(false);
+        raizActual = null;
+        btnVerArbol.setEnabled(false);
         actualizarPaneles();
     }
     
     private void cambiarTema() {
         try {
             boolean esOscuro = FlatLaf.isLafDark();
-            
             if (esOscuro) {
                 UIManager.setLookAndFeel(new FlatLightLaf());
-                aplicarTemaGlobal(false); // Cambiar a paleta CLARA
+                aplicarTemaGlobal(false); 
             } else {
                 UIManager.setLookAndFeel(new FlatDarkLaf());
-                aplicarTemaGlobal(true); // Cambiar a paleta OSCURA
+                aplicarTemaGlobal(true); 
             }
-            
             SwingUtilities.updateComponentTreeUI(this);
-            
         } catch (Exception ex) { ex.printStackTrace(); }
     }
 

@@ -356,9 +356,16 @@ public class Proyecto_Final_Automatas1 {
         // Transiciones para todos los estados que comienzan con 'M'
         transiciones.put("M", Map.of(
             'A', "MA",
+            'E', "ME",
             'O', "MO"
         ));
-
+        
+        // Para hacer "METODO"
+        transiciones.put("ME",  Map.of('T', "MET"));
+        transiciones.put("MET", Map.of('O', "METO"));
+        transiciones.put("METO", Map.of('D', "METOD"));
+        transiciones.put("METOD", Map.of('O', "METODO"));
+        
         transiciones.put("MA",    Map.of(
             'G', "MAG",
             'T', "MAT"
