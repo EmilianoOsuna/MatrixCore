@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "c:\\Users\\emili\\Downloads\\flatlaf-3.7.jar"
+    ]
+}

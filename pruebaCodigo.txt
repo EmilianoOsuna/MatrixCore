@@ -1,0 +1,11 @@
+CREAR CADENA msg1 = "Resultado: " + (5 + 3);                     
+CREAR CADENA msg2 = "Área: " + (base * altura);                  
+CREAR CADENA msg3 = "Valor: " + (SEN(45) + COS(30));            
+CREAR CADENA msg4 = "Error " + 5 + 3;
+CREAR CADENA msg5 = "X = " + (5 + );
+CREAR CADENA msg6 = "Dato: " + ();
+CREAR CADENA msg7 = "Total: " + (5 * (2 + 3));
+CREAR CADENA msg8 = "Número: " + (RAIZ());
+CREAR CADENA msg9 = "Resultado " + (5 + 3) + " unidades";
+CREAR CADENA msg10 = "Prueba " + 5 * 3;
+CREAR CADENA msg10 = "Prueba " + (5 * 3)(;
