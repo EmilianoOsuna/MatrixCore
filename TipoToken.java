@@ -58,9 +58,11 @@ public enum TipoToken {
     PR_ELIMINAR,
     PR_ENTONCES,
     PR_EXP,
+    PR_EMPIEZA_WHILE,
 
     PR_FILA,
     PR_FIN_SI,
+    PR_FIN_WHILE,
 
     PR_GAUSS,
     PR_GAUSSJ,
@@ -101,5 +103,6 @@ public enum TipoToken {
 
     PR_UNOS,
 
-    PR_VECTOR
+    PR_VECTOR,
+    PR_WHILE
 }

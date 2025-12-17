@@ -276,7 +276,7 @@ public class CompiladorUI extends JFrame {
                 
                 doc.setCharacterAttributes(0, texto.length(), estiloNormal, true);
 
-                String regexKeywords = "(?U)(?i)\\b(CREAR|CADENA|NUM|VECTOR|MATRIZ|SI|SINO|FIN_SI|TAMAÑO|MOSTRAR|MODIFICAR|ELIMINAR|DETERMINANTE|INVERSA|TRANSPUESTA|ADJUNTA|COFACTORES|RANGO|SEN|COS|TAN|RAIZ|POTENCIA|LOG|LN|EXP|PI|LOG10|CELDA|CEROS|COLUMNA|CRUZ|DIAGONAL|AGREGAR|METODO|DE)\\b";
+                String regexKeywords = "(?U)(?i)\\b(CREAR|CADENA|NUM|VECTOR|MATRIZ|SI|SINO|FIN_SI|TAMAÑO|MOSTRAR|MODIFICAR|OBTENER|ELIMINAR|DETERMINANTE|INVERSA|TRANSPUESTA|ADJUNTA|COFACTORES|RANGO|SEN|COS|TAN|RAIZ|POTENCIA|LOG|LN|EXP|PI|LOG10|CELDA|CEROS|COLUMNA|CRUZ|DIAGONAL|AGREGAR|METODO|DE|WHILE|EMPIEZA_WHILE|FIN_WHILE)\\b";
                 String regexCadenas = "\"[^\"]*\"";
                 String regexNumeros = "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b";
                 String regexComentarios = "//.*|/\\*[\\s\\S]*?\\*/";

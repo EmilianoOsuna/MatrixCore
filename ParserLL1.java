@@ -27,6 +27,7 @@ public class ParserLL1 {
         TipoToken.PR_MOSTRAR,
         TipoToken.PR_MODIFICAR,
         TipoToken.PR_OBTENER,
+        TipoToken.PR_WHILE,
         TipoToken.EOF
     );
 
@@ -87,7 +88,7 @@ public class ParserLL1 {
 // -------------------------------------INICIO DEL PARSER----------------------------------------------------
 /*
 GRAMÁTICA UTILIZADA:
-inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicional()
+inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicional() | cicloWhile()
 */
     public void inicio() {
         raizArbol = new NodoArbol("INICIO");
@@ -108,6 +109,9 @@ inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicion
             case PR_SI:
                 raizArbol.agregarHijo(condicional());
                 break;
+            case PR_WHILE:
+                raizArbol.agregarHijo(cicloWhile());
+                break;
             default:
                 errores.agregarError(TablaErrores.ERROR_INICIAL,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
@@ -120,7 +124,7 @@ inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicion
         match(TipoToken.EOF,"Algo salió mal.");
     }
 
-    // Esto es para evitar hacer el ciclo cuando hacemos condicionales:
+    // Esto es para evitar hacer el ciclo cuando hacemos anidaciones:
     public NodoArbol inicioSinWhile() {
             NodoArbol nodo = null;
             switch(tokenActual().getTipo()){
@@ -139,14 +143,16 @@ inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicion
             case PR_SI:
                 nodo = condicional();
                 break;
+                case PR_WHILE:
+                nodo = cicloWhile();
+                break;
             default:
                 errores.agregarError(TablaErrores.ERROR_INICIAL,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
-                    "Se espera una acción inicial como CREAR, MODIFICAR, OBTENER en vez de: " + tokenActual().getLexema()
+                    "Se espera una acción inicial como CREAR, MODIFICAR, OBTENER en vez de: " + tokenAnterior().getLexema()
                 );
                 panico();
             }
-            panicoUsado = false;
             return nodo;
         }
 //---------------------------------------------------------------------------------------------------------------
@@ -1770,21 +1776,27 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
         
         // Analiza el bloque verdadero
         nodo.agregarHijo(inicioSinWhile());
+        if (panicoUsado) return null;
         // Esto para permitir condicionales anidados
         while(tokenActual().getTipo() == TipoToken.PR_CREAR ||
               tokenActual().getTipo() == TipoToken.PR_MODIFICAR ||
               tokenActual().getTipo() == TipoToken.PR_MOSTRAR ||
               tokenActual().getTipo() == TipoToken.PR_OBTENER ||
-              tokenActual().getTipo() == TipoToken.PR_SI ){
+              tokenActual().getTipo() == TipoToken.PR_SI ||
+              tokenActual().getTipo() == TipoToken.PR_WHILE){
               nodo.agregarHijo(inicioSinWhile());
+              if (panicoUsado) return null;
         }
         nodo.agregarHijo(bloqueSino());
+        if (panicoUsado) return null;
         while(tokenActual().getTipo() == TipoToken.PR_CREAR ||
               tokenActual().getTipo() == TipoToken.PR_MODIFICAR ||
               tokenActual().getTipo() == TipoToken.PR_MOSTRAR ||
               tokenActual().getTipo() == TipoToken.PR_OBTENER ||
-              tokenActual().getTipo() == TipoToken.PR_SI ){
+              tokenActual().getTipo() == TipoToken.PR_SI ||
+              tokenActual().getTipo() == TipoToken.PR_WHILE){
               nodo.agregarHijo(inicioSinWhile());
+              if (panicoUsado) return null;
         }
         nodo.agregarHijo(match(TipoToken.PR_FIN_SI, "Se esperaba 'FIN_SI' para cerrar el condicional."));
         return nodo;
@@ -1797,6 +1809,8 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
             NodoArbol nodo = new NodoArbol("bloqueSino");
             nodo.agregarHijo(match(TipoToken.PR_SINO, "Se esperaba la palabra reservada 'SINO'.")); 
             nodo.agregarHijo(inicioSinWhile());
+            if (panicoUsado) return null;
+
             return nodo;
         }
         return null;
@@ -1873,10 +1887,45 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
         return nodo;
     }
 
+//------------------------------------------------------------------------------------------------------------
+// -----------------------------------------CICLO WHILE------------------------------------------------------- 
+/* 
+GRANÁTICA UTILIZADA
+cicloWhile() → WHILE '(' condicion() ')' INICIO_WHILE inicio()  FIN_WHILE
+*/   
     
-    
-    
-    
+        private NodoArbol cicloWhile() {
+        if (panicoUsado) return null;
+        NodoArbol nodo = new NodoArbol("cicloWhile");
+
+        nodo.agregarHijo(match(TipoToken.PR_WHILE, "Se esperaba la palabra reservada 'WHILE' para iniciar con el ciclo."));
+
+        nodo.agregarHijo(match(TipoToken.PARENT_IZQ, "Se esperaba '(' después de 'WHILE' para comenzar con la condición."));
+        nodo.agregarHijo(condicion());
+        
+        nodo.agregarHijo(match(TipoToken.PARENT_DER, "Se esperaba ')' para cerrar la condición."));
+
+        nodo.agregarHijo(match(TipoToken.PR_EMPIEZA_WHILE, "Se esperaba 'EMPIEZA_WHILE' después de la condición."));
+        if (panicoUsado) return null;
+        // Analiza el bloque verdadero
+        nodo.agregarHijo(inicioSinWhile());
+        if (panicoUsado) return null;
+
+        // Esto para permitir condicionales anidados
+        while(tokenActual().getTipo() == TipoToken.PR_CREAR ||
+              tokenActual().getTipo() == TipoToken.PR_MODIFICAR ||
+              tokenActual().getTipo() == TipoToken.PR_MOSTRAR ||
+              tokenActual().getTipo() == TipoToken.PR_OBTENER ||
+              tokenActual().getTipo() == TipoToken.PR_SI ||
+              tokenActual().getTipo() == TipoToken.PR_WHILE){
+              nodo.agregarHijo(inicioSinWhile());
+              if (panicoUsado) return null;
+        }
+        nodo.agregarHijo(match(TipoToken.PR_FIN_WHILE, "Se esperaba 'FIN_WHILE' para cerrar el condicional."));
+        return nodo;
+    }
+
+
     
     /////////////////////////////////////////////////////////////////////////
 

@@ -28,11 +28,14 @@ public class Proyecto_Final_Automatas1 {
             "D","DE","DET","DETE","DETER","DETERM","DETERMI","DETERMIN","DETERMINA","DETERMINAN","DETERMINANT","DETERMINANTE",
             "DI","DIA","DIAG","DIAGO","DIAGON","DIAGONA","DIAGONAL",
 
-            "EL","ELI","ELIM","ELIMI","ELIMIN","ELIMINA","ELIMINAR",
+            "E","EL","ELI","ELIM","ELIMI","ELIMIN","ELIMINA","ELIMINAR",
             "EN","ENT","ENTO","ENTON","ENTONC","ENTONCE","ENTONCES",
             "EX","EXP",
+            "EM","EMP","EMPI","EMPIE","EMPIEZ","EMPIEZA","EMPIEZA_","EMPIEZA_W","EMPIEZA_WH","EMPIEZA_WHI","EMPIEZA_WHIL","EMPIEZA_WHILE",
+
 
             "F","FI","FIN","FIN_","FIN_S","FIN_SI",
+            "FIN_W","FIN_WH","FIN_WHI","FIN_WHIL","FIN_WHILE",
             "FIL","FILA",
 
             "G","GA","GAU","GAUS","GAUSS","GAUSSJ",
@@ -72,7 +75,8 @@ public class Proyecto_Final_Automatas1 {
 
             "U","UN","UNO","UNOS",
 
-            "V","VE","VEC","VECT","VECTO","VECTOR"
+            "V","VE","VEC","VECT","VECTO","VECTOR",
+            "W","WH","WHI","WHIL","WHILE"
         );
 
         // 2. Mueve aquí el alfabeto
@@ -114,7 +118,8 @@ public class Proyecto_Final_Automatas1 {
             Map.entry('S', "S"),
             Map.entry('T', "T"),
             Map.entry('U', "U"),
-            Map.entry('V', "V")
+            Map.entry('V', "V"),
+            Map.entry('W', "W")
         ));
 
         // Transiciones para todos los estados que comienzan con 'A'
@@ -265,7 +270,8 @@ public class Proyecto_Final_Automatas1 {
         transiciones.put("E", Map.of(
             'L', "EL",
             'N', "EN",
-            'X', "EX"
+            'X', "EX",
+            'M',"EM"
         ));
 
         // Para hacer "ELIMINAR"
@@ -287,6 +293,20 @@ public class Proyecto_Final_Automatas1 {
         // Para hacer "EXP"
         transiciones.put("EX", Map.of('P', "EXP"));
 
+        // Para hacer "EMPIEZA_WHILE"
+        transiciones.put("EM",       Map.of('P', "EMP"));
+        transiciones.put("EMP",      Map.of('I', "EMPI"));
+        transiciones.put("EMPI",     Map.of('E', "EMPIE"));
+        transiciones.put("EMPIE",    Map.of('Z', "EMPIEZ"));
+        transiciones.put("EMPIEZ",   Map.of('A', "EMPIEZA"));
+        transiciones.put("EMPIEZA",  Map.of('_', "EMPIEZA_"));
+        transiciones.put("EMPIEZA_", Map.of('W', "EMPIEZA_W"));
+        transiciones.put("EMPIEZA_W",Map.of('H', "EMPIEZA_WH"));
+        transiciones.put("EMPIEZA_WH",Map.of('I', "EMPIEZA_WHI"));
+        transiciones.put("EMPIEZA_WHI",Map.of('L', "EMPIEZA_WHIL"));
+        transiciones.put("EMPIEZA_WHIL",Map.of('E', "EMPIEZA_WHILE"));
+
+
         // Transiciones para todos los estados que comienzan con 'F'
         transiciones.put("F", Map.of('I', "FI"));
 
@@ -294,11 +314,19 @@ public class Proyecto_Final_Automatas1 {
                     'N', "FIN",   
                     'L', "FIL"    
         ));
-        // Para hacer "FIN_SI"
+        // Para hacer "FIN_SI Y FIN WHILE"
         transiciones.put("FIN", Map.of('_', "FIN_"));
-        transiciones.put("FIN_",Map.of('S', "FIN_S"));
+        transiciones.put("FIN_",Map.of(
+            'S', "FIN_S",
+            'W',"FIN_W"
+        ));
         transiciones.put("FIN_S",Map.of('I', "FIN_SI"));
         
+        transiciones.put("FIN_W",Map.of('H', "FIN_WH"));
+        transiciones.put("FIN_WH",Map.of('I', "FIN_WHI"));
+        transiciones.put("FIN_WHI",Map.of('L', "FIN_WHIL"));
+        transiciones.put("FIN_WHIL",Map.of('E', "FIN_WHILE"));
+
         // Para hacer "FILA"
         transiciones.put("FIL", Map.of('A', "FILA"));
 
@@ -334,6 +362,7 @@ public class Proyecto_Final_Automatas1 {
         transiciones.put("INVE", Map.of('R', "INVER"));
         transiciones.put("INVER",Map.of('S', "INVERS"));
         transiciones.put("INVERS",Map.of('A', "INVERSA"));
+
 
 
         // Transiciones para todos los estados que comienzan con 'L'
@@ -542,14 +571,18 @@ public class Proyecto_Final_Automatas1 {
         transiciones.put("UNO", Map.of('S', "UNOS"));
 
 
-        // Transiciones para todos los estados que comienzan con 'V'
-        transiciones.put("V", Map.of('E', "VE"));
-
         // Para hacer "VECTOR"
+        transiciones.put("V", Map.of('E', "VE"));
         transiciones.put("VE",   Map.of('C', "VEC"));
         transiciones.put("VEC",  Map.of('T', "VECT"));
         transiciones.put("VECT", Map.of('O', "VECTO"));
         transiciones.put("VECTO",Map.of('R', "VECTOR"));
+
+        // Para hacer "VECTOR"
+        transiciones.put("W",  Map.of('H', "WH"));
+        transiciones.put("WH",  Map.of('I', "WHI"));
+        transiciones.put("WHI",  Map.of('L', "WHIL"));
+        transiciones.put("WHIL",  Map.of('E', "WHILE"));
         
         String estadoInicial = "INICIO";
 
@@ -576,9 +609,11 @@ public class Proyecto_Final_Automatas1 {
             "ELIMINAR",
             "ENTONCES",
             "EXP",
+            "EMPIEZA_WHILE",
 
             "FILA",
             "FIN_SI",
+            "FIN_WHILE",
 
             "GAUSS",
             "GAUSSJ",
@@ -618,7 +653,9 @@ public class Proyecto_Final_Automatas1 {
 
             "UNOS",
 
-            "VECTOR"
+            "VECTOR",
+            
+            "WHILE"
         );
 
         // Retorna el objeto listo para usar
@@ -630,36 +667,9 @@ public class Proyecto_Final_Automatas1 {
         AFD afd = obtenerAFD();
 
         String codigo = """
-            // Línea 1
-            CREAR CADENA msg1 = "Resultado: " + (5 + 3);                     //(OK)
-            
-            // Línea 2
-            CREAR CADENA msg2 = "Área: " + (base * altura);                  //(OK)
-            
-            // Línea 3
-            CREAR CADENA msg3 = "Valor: " + (SEN(45) + COS(30));             //(OK)
-            
-            // Línea 4
-            CREAR CADENA msg4 = "Error " + 5 + 3;                             //(304) falta paréntesis
-            
-            // Línea 5
-            CREAR CADENA msg5 = "X = " + (5 + );                              //(201) expresión numérica incompleta
-            
-            // Línea 6
-            CREAR CADENA msg6 = "Dato: " + ();                                //(203) expresión vacía
-            
-            // Línea 7
-            CREAR CADENA msg7 = "Total: " + (5 * (2 + 3));                   //(OK)
-            
-            // Línea 8
-            CREAR CADENA msg8 = "Número: " + (RAIZ());                        //(203) argumento vacío
-            
-            // Línea 9
-            CREAR CADENA msg9 = "Resultado " + (5 + 3) + " unidades";         //(OK)
-            
-            // Línea 10
-            CREAR CADENA msg10 = "Prueba " + 5 * 3;                           //(304) expresión sin paréntesis
-            CREAR CADENA msg10 = "Prueba " + (5 * 3)(;
+            WHILE
+            VECTOR
+            CREAR
         """;
 
         Token[] tokens = tokenizador(codigo);
