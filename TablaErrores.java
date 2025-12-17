@@ -5,6 +5,7 @@ public class TablaErrores {
 
     // --- CÓDIGOS DE ERROR (CONSTANTES) ---
     public static final int ERROR_INICIAL = 1;
+    public static final int ERROR_IDENTIFICADOR_CON_NOMBRE_RESERVADO = 2;
     public static final int ERROR_SINTACTICO = 101;
     public static final int ERROR_CADENA_OPERANDO = 103;
     
@@ -32,6 +33,7 @@ public class TablaErrores {
     static {
         // Códigos genéricos
         mapaErrores.put(ERROR_INICIAL, "Error de inicio de instrucción.");
+        mapaErrores.put(ERROR_INICIAL, "El identificador ingresado es una palabra reservada.");
         mapaErrores.put(ERROR_SINTACTICO, "Error sintáctico."); 
         mapaErrores.put(ERROR_CADENA_OPERANDO, "Error en expresión de cadena.");
         

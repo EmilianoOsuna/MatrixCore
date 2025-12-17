@@ -73,6 +73,12 @@ public class ParserLL1 {
 
     private NodoArbol match(TipoToken esperado, String msg) {
         if (panicoUsado) return null; 
+        if(tokenActual().getTipo().toString().startsWith("PR_") && esperado == TipoToken.IDENTIFICADOR){
+            errores.agregarError(TablaErrores.ERROR_SINTACTICO, tokens.get(pos - 1).getLinea(),
+            "'" + tokenActual().getLexema() + "' es una palabra reservada, no puede ser utilizada como identificador." );
+                panico();
+                return null;
+        }
 
         if (tokenActual().getTipo() == esperado) {
             NodoArbol hoja = new NodoArbol(tokenActual().getLexema());
@@ -1910,7 +1916,6 @@ cicloWhile() → WHILE '(' condicion() ')' INICIO_WHILE inicio()  FIN_WHILE
         // Analiza el bloque verdadero
         nodo.agregarHijo(inicioSinWhile());
         if (panicoUsado) return null;
-
         // Esto para permitir condicionales anidados
         while(tokenActual().getTipo() == TipoToken.PR_CREAR ||
               tokenActual().getTipo() == TipoToken.PR_MODIFICAR ||
