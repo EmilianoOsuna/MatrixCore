@@ -7,7 +7,7 @@ import java.util.Set;
 public class Proyecto_Final_Automatas1 {
 
     public static AFD obtenerAFD() {
-        // 1. Mueve aquí la definición de estados
+        // DEFINICIÓN DE ESTADOS
         Set<String> estados = Set.of(
             "INICIO",
             "A","AD","ADJ","ADJU","ADJUN","ADJUNT","ADJUNTA",
@@ -75,7 +75,7 @@ public class Proyecto_Final_Automatas1 {
             "V","VE","VEC","VECT","VECTO","VECTOR"
         );
 
-        // 2. Mueve aquí el alfabeto
+        // DEFINICIÓN DEL ALFABETO
         Set<Character> alfabeto = Set.of(
             'A','B','C','D','E','F','G','H','I','J','K','L','M','N','Ñ',
             'O','P','Q','R','S','T','U','V','W','X','Y','Z',
@@ -94,7 +94,7 @@ public class Proyecto_Final_Automatas1 {
             ' '
         );
 
-        // 3. Mueve aquí el mapa gigante de transiciones
+        // DEFINICIÓN DE TRANSICIONES
         Map<String, Map<Character, String>> transiciones = new HashMap<>();
         // TRANSICIONES DE INICIO:
                 transiciones.put("INICIO", Map.ofEntries(
@@ -162,11 +162,8 @@ public class Proyecto_Final_Automatas1 {
         transiciones.put("ARCT",  Map.of('A', "ARCTA"));
         transiciones.put("ARCTA", Map.of('N', "ARCTAN"));
         
-        
-        
-        
-        
-        
+
+
         // Transiciones para todos los estados que comienzan con 'C'
         transiciones.put("C", Map.of(
             'A', "CA",
@@ -621,7 +618,7 @@ public class Proyecto_Final_Automatas1 {
             "VECTOR"
         );
 
-        // Retorna el objeto listo para usar
+        // AFD COMPLETO
         return new AFD(estados, alfabeto, transiciones, estadoInicial, estadosAceptacion);
     }
 

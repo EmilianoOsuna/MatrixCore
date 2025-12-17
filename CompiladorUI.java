@@ -354,7 +354,7 @@ public class CompiladorUI extends JFrame {
             // OBTENER ERRORES LÉXICOS DEL AFD
             Errores errLex = afd.getErrores();
             if (errLex.hayErrores()) {
-                contadorErroresLexicos = errLex.getErrores().size(); // <--- Guardamos cantidad
+                contadorErroresLexicos = errLex.getErrores().size(); // Guardamos cantidad
                 for (ErrorCompilacion err : errLex.getErrores()) {
                     modeloErroresLexicos.addRow(new Object[]{err.getNumero(), err.getLinea(), err.getDescripcion()});
                 }
@@ -368,7 +368,7 @@ public class CompiladorUI extends JFrame {
                 }
             }
 
-            // Preparar tokens para parser: solo líneas sin errores
+            // Preparar tokens para parser (solo líneas sin errores)
             List<Token> tokensParaParser = new ArrayList<>();
             for (Token tk : tokensAnalizados) {
                 if (!lineasConError.contains(tk.getLinea())) { 
@@ -387,7 +387,7 @@ public class CompiladorUI extends JFrame {
 
                 // 6. Llenar Tabla de Errores Sintácticos
                 if (parser.errores.hayErrores()) {
-                    contadorErroresSintacticos = parser.errores.getErrores().size(); // <--- Guardamos cantidad
+                    contadorErroresSintacticos = parser.errores.getErrores().size(); // Guardamos cantidad
                     for (ErrorCompilacion err : parser.errores.getErrores()) {
                         modeloErroresSintacticos.addRow(new Object[]{err.getNumero(), err.getLinea(), err.getDescripcion()});
                     }
@@ -422,8 +422,6 @@ public class CompiladorUI extends JFrame {
             }
             
             txtConsola.setText(reporte.toString());
-            
-            // --- SIEMPRE ENFOCAR LA CONSOLA AL FINAL ---
             pestanasInferior.setSelectedIndex(0); 
 
         } catch (Exception ex) {
@@ -487,21 +485,15 @@ public class CompiladorUI extends JFrame {
 
     // --- CONFIGURACIÓN DE COLUMNAS DE ERRORES ---
     private void configurarTablaErrores(JTable tabla) {
-        // Esto es clave: le dice a la tabla que solo la última columna se estire
         tabla.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         
         TableColumnModel columnModel = tabla.getColumnModel();
         
-        // Columna 0: Código Error (La hacemos fija y angosta)
         columnModel.getColumn(0).setPreferredWidth(70);
         columnModel.getColumn(0).setMaxWidth(90);
-        
-        // Columna 1: Línea (Aún más angosta)
+
         columnModel.getColumn(1).setPreferredWidth(50);
         columnModel.getColumn(1).setMaxWidth(70);
-        
-        // La Columna 2 (Descripción) no se toca aquí, 
-        // por lo que tomará todo el ancho sobrante gracias a AUTO_RESIZE_LAST_COLUMN.
     }
 
     public static void main(String[] args) {

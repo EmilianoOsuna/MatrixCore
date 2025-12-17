@@ -9,12 +9,12 @@ public class Errores {
         listaErrores = new ArrayList<>();
     }
 
-    // --- MÉTODO ACTUALIZADO ---
+    // --- AGREGAR ERROR ---
     public void agregarError(int codigo, int linea, String detalleEspecifico) {
-        // 1. Título base desde la tabla
+        //Título base desde la tabla
         String titulo = TablaErrores.getMensaje(codigo);
         
-        // 2. Concatenación con tu mensaje detallado
+        // Concatenación con el mensaje detallado
         String descripcionFinal;
         if (detalleEspecifico != null && !detalleEspecifico.isEmpty()) {
             descripcionFinal = titulo + " " + detalleEspecifico;

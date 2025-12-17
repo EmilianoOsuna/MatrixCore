@@ -5,10 +5,10 @@ import java.util.Map;
 
 public class PanelArbol extends JPanel {
     private NodoArbol raiz;
-    private final int RADIO = 25;      // Radio de los círculos
+    private final int RADIO = 20;      // Radio de los círculos
     private final int DIAMETRO = RADIO * 2;
-    private final int V_GAP = 60;      // Espacio vertical entre niveles
-    private final int H_GAP = 15;      // Espacio horizontal mínimo entre nodos
+    private final int V_GAP = 70;      // Espacio vertical entre niveles
+    private final int H_GAP = 20;      // Espacio horizontal mínimo entre nodos
 
     // Mapas para guardar las posiciones calculadas (para no recalcular al pintar)
     private Map<NodoArbol, Point> posiciones = new HashMap<>();
@@ -35,7 +35,7 @@ public class PanelArbol extends JPanel {
         }
     }
 
-    // Paso 1: Calcular cuánto ancho necesita cada nodo basado en sus hijos
+    //Calcular cuánto ancho necesita cada nodo basado en sus hijos
     private int calcularAncho(NodoArbol nodo) {
         if (nodo.getHijos().isEmpty()) {
             int ancho = DIAMETRO + H_GAP;
@@ -51,7 +51,7 @@ public class PanelArbol extends JPanel {
         return anchoTotal;
     }
 
-    // Paso 2: Asignar coordenadas (x, y) recursivamente
+    //Asignar coordenadas (x, y) recursivamente
     private void calcularCoordenadas(NodoArbol nodo, int xInfo, int y) {
         // La posición Y es fácil: depende del nivel
         int xCentro;
