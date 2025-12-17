@@ -1,0 +1,383 @@
+﻿//CREACIÓN DE CADENAS:
+   CREAR CADENA c1 = "C1";
+            CREAR CADENA c2 = "Hola" + identificador1 ;
+            CREAR CADENA c3 = saludo +  nombre;
+            CREAR CADENA c4 = "Hola" + nombre;
+            CREAR CADENA c5 = "Nosotros somos el equipo" + (RAIZ(4) * 100 /100);
+CREAR CADENA msg7 = "Total: " + (5 * (2 + 3));  
+            CREAR CADENA c5 = (LN(20) + LOG10(EXP(COS(15*RAIZ(COS(74))))) + LOG(3,5));
+//CREACIÓN DE NÚMEROS:
+CREAR NUM b = OBTENER CELDA(2+1, 4*2) DE matriz2;
+            CREAR NUM c = (OBTENER CELDA(1,1) DE M) + 5;
+            CREAR NUM d = COS(OBTENER CELDA(3,2) DE A);
+            CREAR NUM e = OBTENER CELDA(1,2) DE mat + OBTENER CELDA(2,1) DE mat;
+
+
+CREAR NUM e = ARCSEN(0.5) + ARCCOS(0.3) + ARCTAN(1);
+CREAR NUM f = LN(20) + LOG10(EXP(COS(15*RAIZ(COS(74))))) + LOG(3,5);
+
+
+
+
+
+
+//CREACIÓN DE VECTORES:
+                CREAR VECTOR v1 = [5,3];
+            CREAR VECTOR v2 = [1,2]; 
+            CREAR VECTOR v3 = [4,2];
+            CREAR VECTOR v4 = [1,2]; 
+            CREAR NUM a = OBTENER CELDA(1,2) DE matriz3;
+            CREAR NUM b = OBTENER CELDA(LOG10(EXP(COS(15*RAIZ(COS(74))))) + LOG(3,5)+1, 4*2) DE matriz2;
+            CREAR NUM c = (OBTENER CELDA(1,1) DE M) + 5;
+            CREAR NUM d = COS(OBTENER CELDA(3,2) DE A);
+
+
+              //CREACIÓN DE MATRICES:
+CREAR MATRIZ IDENTIDAD TAMAÑO(1,1) X;
+CREAR MATRIZ DIAGONAL TAMAÑO(1,1) X;
+CREAR MATRIZ CEROS TAMAÑO(1,1) X;
+CREAR MATRIZ UNOS TAMAÑO(1,1) X;
+           CREAR MATRIZ TAMAÑO(4,2) F = [[1,1],[2,2],[3,3],[4,4]];
+           CREAR MATRIZ TAMAÑO(2,4) G = [[9,8,7,6],[5,4,3,2]];
+           CREAR MATRIZ TAMAÑO(2,2) H = A + E;
+           CREAR MATRIZ TAMAÑO(2,2) I = E - A;
+           CREAR MATRIZ TAMAÑO(2,2) J = A * 2;
+           CREAR MATRIZ TAMAÑO(2,2) K = E / 5;
+           CREAR MATRIZ TAMAÑO(3,2) L = B * 3;
+           CREAR MATRIZ TAMAÑO(3,3) M = D - E;
+           CREAR MATRIZ TAMAÑO(2,3) N = C + C;
+           CREAR MATRIZ TAMAÑO(2,3) N = C;
+CREAR MATRIZ TAMAÑO(2,2) F = TRANSPUESTA(A);
+           CREAR MATRIZ TAMAÑO(2,2) G = INVERSA(A);
+           CREAR MATRIZ TAMAÑO(2,2) H = ADJUNTA(A);        
+           CREAR MATRIZ TAMAÑO(2,2) I = COFACTORES(A);
+           CREAR MATRIZ TAMAÑO(2,2) J = GAUSS(A);
+           CREAR MATRIZ TAMAÑO(2,2) K = GAUSSJ(A);
+
+
+
+
+        //MODIFICAIONES:
+MODIFICAR M1 ELIMINAR FILA 1;
+MODIFICAR M1 ELIMINAR COLUMNA 2;
+MODIFICAR M1 ELIMINAR FILA 3;
+MODIFICAR M1 ELIMINAR COLUMNA 2;
+MODIFICAR M1 ELIMINAR FILA COS(0);
+MODIFICAR M1 ELIMINAR FILA (1);
+MODIFICAR M1 ELIMINAR COLUMNA 1;
+MODIFICAR M1 FILA 1 = [5,3];
+MODIFICAR M1 COLUMNA 2 = [3,1,5];
+MODIFICAR M1 COLUMNA 2 = [5,3];
+MODIFICAR M1 FILA 5 = [5,3];
+MODIFICAR M1 COLUMNA 2 = [5,3];MODIFICAR nombre_matriz AGREGAR COLUMNA [5,3];
+MODIFICAR nombre_matriz AGREGAR FILA [3,5];
+MODIFICAR nombre_matriz AGREGAR COLUMNA [5,3,5];
+MODIFICAR nombre_matriz AGREGAR FILA [PI,EXP(TAN(ARCCOS(PI))),12,COS(X)];
+
+
+
+
+
+
+        //MOSTRAR:
+            MOSTRAR cadenaUsuario;
+            MOSTRAR ((5 + 3) * 2);
+            MOSTRAR TRANSPUESTA(matrizA);
+            MOSTRAR PROCEDIMIENTO TRANSPUESTA(matrizB);
+            MOSTRAR INVERSA(matrizC);
+            MOSTRAR PROCEDIMIENTO INVERSA(matrizD);
+            MOSTRAR ADJUNTA(matrizE);
+            MOSTRAR PROCEDIMIENTO ADJUNTA(matrizF);
+            MOSTRAR COFACTORES(matrizG);
+            MOSTRAR PROCEDIMIENTO COFACTORES(matrizH);
+            MOSTRAR GAUSS(matrizI);
+            MOSTRAR PROCEDIMIENTO GAUSS(matrizJ);
+            MOSTRAR GAUSSJ(matrizK);
+            MOSTRAR PROCEDIMIENTO GAUSSJ(matrizL);
+            MOSTRAR RANGO(matrizM);
+            MOSTRAR PROCEDIMIENTO RANGO(matrizN);
+            MOSTRAR DETERMINANTE(matrizO);
+            MOSTRAR PROCEDIMIENTO DETERMINANTE(matrizP);
+            MOSTRAR DETERMINANTE(matrizQ) METODO COFACTORES;
+            MOSTRAR DETERMINANTE(matrizR) METODO GAUSS;
+            MOSTRAR cadena1 + ((3 + 4) * 2);
+
+
+        //Para operaciones con vectores:
+MOSTRAR v2;
+            MOSTRAR v1 + v2;        
+            MOSTRAR CRUZ(v1, v2);
+            MOSTRAR PPUNTO(v1, v2);
+            MOSTRAR NORMALIZAR(v1);
+            MOSTRAR MAGNITUD(v1);
+            MOSTRAR PROCEDIMIENTO CRUZ(v1, v2);
+            MOSTRAR PROCEDIMIENTO PPUNTO(v1, v2);
+            MOSTRAR PROCEDIMIENTO NORMALIZAR(v1);
+            MOSTRAR PROCEDIMIENTO MAGNITUD(v1);
+
+
+________________
+
+________________
+
+
+________________
+
+
+//CONDICIONALES Y WHILE
+WHILE (X>4) EMPIEZA_WHILE
+        //WHILE ANIDADO
+        WHILE (Z>7) EMPIEZA_WHILE
+                CREAR NUM e = ARCSEN(0.5) + ARCCOS(0.3) + ARCTAN(1);
+                CREAR NUM f = LN(20) + LOG10(EXP(COS(15*RAIZ(COS(74))))) + LOG(3,5);
+                //CREACIÓN DE VECTORES:
+                CREAR VECTOR v1 = [5,3];
+            CREAR VECTOR v2 = [1,2]; 
+            CREAR VECTOR v3 = [4,2];
+            CREAR VECTOR v4 = [1,2]; 
+CREAR VECTOR v5 = OBTENER FILA 2 DE matrizA;
+CREAR VECTOR v6 = OBTENER COLUMNA 1 DE matrizB; 
+            CREAR NUM a = OBTENER CELDA(1,2) DE matriz3;
+            CREAR NUM b = OBTENER CELDA(LOG10(EXP(COS(15*RAIZ(COS(74))))) + LOG(3,5)+1, 4*2) DE matriz2;
+            CREAR NUM c = (OBTENER CELDA(1,1) DE M) + 5;
+            CREAR NUM d = COS(OBTENER CELDA(3,2) DE A);
+
+
+              //CREACIÓN DE MATRICES:
+           CREAR MATRIZ TAMAÑO(4,2) F = [[1,1],[2,2],[3,3],[4,4]];
+           CREAR MATRIZ TAMAÑO(2,4) G = [[9,8,7,6],[5,4,3,2]];
+           CREAR MATRIZ TAMAÑO(2,2) H = A + E;
+           CREAR MATRIZ TAMAÑO(2,2) I = E - A;
+           CREAR MATRIZ TAMAÑO(2,2) J = A * 2;
+           CREAR MATRIZ TAMAÑO(2,2) K = E / 5;
+           CREAR MATRIZ TAMAÑO(3,2) L = B * 3;
+           CREAR MATRIZ TAMAÑO(3,3) M = D - E;
+           CREAR MATRIZ TAMAÑO(2,3) N = C + C;
+           CREAR MATRIZ TAMAÑO(2,3) N = C;
+        //MOSTRAR:
+            MOSTRAR cadenaUsuario;
+            MOSTRAR ((5 + 3) * 2);
+            MOSTRAR TRANSPUESTA(matrizA);
+            MOSTRAR PROCEDIMIENTO TRANSPUESTA(matrizB);
+            MOSTRAR INVERSA(matrizC);
+            MOSTRAR PROCEDIMIENTO INVERSA(matrizD);
+            MOSTRAR ADJUNTA(matrizE);
+            MOSTRAR PROCEDIMIENTO ADJUNTA(matrizF);
+            MOSTRAR COFACTORES(matrizG);
+            MOSTRAR PROCEDIMIENTO COFACTORES(matrizH);
+            MOSTRAR GAUSS(matrizI);
+            MOSTRAR PROCEDIMIENTO GAUSS(matrizJ);
+            MOSTRAR GAUSSJ(matrizK);
+            MOSTRAR PROCEDIMIENTO GAUSSJ(matrizL);
+            MOSTRAR RANGO(matrizM);
+            MOSTRAR PROCEDIMIENTO RANGO(matrizN);
+            MOSTRAR DETERMINANTE(matrizO);
+            MOSTRAR PROCEDIMIENTO DETERMINANTE(matrizP);
+            MOSTRAR DETERMINANTE(matrizQ) METODO COFACTORES;
+            MOSTRAR DETERMINANTE(matrizR) METODO GAUSS;
+            MOSTRAR cadena1 + ((3 + 4) * 2);
+
+
+
+
+        FIN_WHILE
+CREAR NUM x = 10;
+            CREAR NUM y = 5;
+            CREAR CADENA mensaje = "Resultado:";
+            
+            //Ejemplo 1: Comparación numérica simple
+            SI (x > y) ENTONCES
+                MOSTRAR mensaje + " x es mayor que y";
+            SINO
+                MOSTRAR mensaje + " x NO es mayor que y";
+            FIN_SI
+            
+            //Ejemplo 2: Comparación usando funciones numéricas
+            CREAR NUM raiz1 = RAIZ(49);
+            SI (raiz1 == 7) ENTONCES
+                MOSTRAR "La raíz cuadrada es correcta";
+            SINO
+                MOSTRAR "Algo salió mal";
+            FIN_SI
+            
+           // Ejemplo 3: Comparación entre cadenas
+            CREAR CADENA saludo = "Hola";
+            CREAR CADENA nombre = "Eddie";
+            
+            SI (saludo == "Hola") ENTONCES
+                MOSTRAR saludo + " " + nombre;
+            SINO
+                MOSTRAR "No hay saludo";
+            FIN_SI
+            
+            //Ejemplo 4: Condición anidada
+            CREAR NUM a = 3;
+            CREAR NUM b = 9;
+            CREAR NUM c = 5;
+            
+            SI (a < b) ENTONCES
+                MOSTRAR "a es menor que b";
+                SI (c < b) ENTONCES
+                    MOSTRAR "c es menor que b";
+                SINO
+                    MOSTRAR "c NO es menor que b";
+                FIN_SI
+            SINO
+                MOSTRAR "a NO es menor que b";
+            FIN_SI
+            
+            //Ejemplo 5: 
+            SI ((a + b) > d) ENTONCES
+            CREAR NUM resultado = a * b;
+            MOSTRAR mensaje + "a + b es mayor que d";
+
+
+            SI ((c * 3) < (b - a)) ENTONCES
+                CREAR NUM resultado1 = resultado + c;
+                MOSTRAR mensaje + " c * 3 es menor que b - a";
+
+
+                SI ((b / c) == 5) ENTONCES
+                    CREAR NUM resultado3 = resultado - 1;
+                    MOSTRAR mensaje + " b dividido c es 5";
+                SINO
+                    CREAR NUM resultado4 = resultado + 1;
+                    MOSTRAR mensaje + " b dividido c no es 5";
+                FIN_SI
+
+
+                SI ((d - a) >= (c + 1)) ENTONCES
+                    CREAR NUM resultado5 = resultado * 2;
+                    MOSTRAR mensaje + " d - a mayor o igual que c + 1";
+                FIN_SI
+            SINO
+                CREAR NUM resultado6 = resultado / 2;
+                MOSTRAR mensaje + " c * 3 no es menor que b - a";
+            FIN_SI
+
+
+        SINO
+            CREAR NUM resultado7 = a + d;
+            MOSTRAR mensaje + " a + b no es mayor que d";
+
+
+            SI ((a + b / c) == 7) ENTONCES
+                CREAR NUM resultado8 = resultado * 3;
+                MOSTRAR mensaje + " (a + b) / c es 7";
+            FIN_SI
+        FIN_SI
+FIN_WHILE
+
+
+
+
+
+
+código con muchos errores:
+CREAR MATRIZ TAMAÑO(2,2) T = [["a",2],[3,4]]; /* error 415 */
+
+
+CREAR MATRIZ CEROS TAMAÑO(3,3) Z;
+
+
+PARA MODIFICACIÓN:
+MODIFICAR M1 CELDA(1,2) = 5;                         /* OK */
+            
+            MODIFICAR M1 CELDA(1) = 5;                           
+            
+            MODIFICAR M1 CELDA(1,2,3) = 5;                      
+            
+            MODIFICAR M1 CELDA(,2) = 5;                          
+            
+            MODIFICAR M1 CELDA(1,) = 5;                          
+            
+            MODIFICAR M1 CELDA(1,2) = ;                         
+            
+            MODIFICAR M1 CELDA(1,2) = 5 + ;                      
+            
+            MODIFICAR M1 CELDA(1,2 = 5;                         
+            
+            MODIFICAR M1 CELDA 1,2) = 5;                        
+            
+            /* OK */
+            
+            MODIFICAR M1 AGREGAR FILA [3,5];                     
+            
+            MODIFICAR M1 AGREGAR FILA [];                        
+            
+            MODIFICAR M1 AGREGAR COLUMNA [5];                     
+            
+            MODIFICAR M1 AGREGAR FILA [5,,3];                    
+            
+            MODIFICAR M1 AGREGAR FILA 5,3];                       
+            
+            MODIFICAR M1 AGREGAR FILA [5,3;                       
+            
+            MODIFICAR M1 AGREGAR FILA [5 3];                    
+            
+            MODIFICAR M1 AGREGAR COLUMNA [5,+];                  
+            
+            MODIFICAR M1 AGREGAR [5,3];                          
+            
+            
+            MODIFICAR M1 ELIMINAR FILA 1;                        
+            
+            MODIFICAR M1 ELIMINAR COLUMNA 2;        
+            
+            MODIFICAR M1 ELIMINAR FILA ;                          
+            
+            MODIFICAR M1 ELIMINAR COLUMNA ;                       
+            
+            MODIFICAR M1 ELIMINAR FILA -1;                     
+            
+            MODIFICAR M1 ELIMINAR FILA (1);                    
+            
+            MODIFICAR M1 ELIMINAR 1;                              
+            
+            
+            MODIFICAR M1 FILA 1 = [5,3];                                    
+            MODIFICAR M1 COLUMNA 2 = [3,1,5];                 
+            
+            MODIFICAR M1 FILA 1 = [];                       
+            
+            MODIFICAR M1 COLUMNA 2 = [5];                      
+            
+            MODIFICAR M1 FILA = [5,3];                         
+            
+            MODIFICAR M1 COLUMNA 2 = 5,3];                      
+            
+            MODIFICAR M1 FILA 1 = [5,3;                      
+            
+            MODIFICAR M1 FILA 1 [5,3];                          
+            
+            MODIFICAR M1 FILA 1 = [5,,3];               
+            
+            MODIFICAR M1 FILA 1 = [5,+];                     
+            
+            MODIFICAR M1 FILA 1 = [(5+3)*RAIZ(23),5];             
+            
+            MODIFICAR M1 FILA 1 = [(5+3) * 2,3];                   
+Para probar OBTENER:
+            DETERMINANTE
+            DE
+            OBTENER FILA 1 DE M1;
+                        
+            OBTENER CELDA(1 4) DE matrizA;          
+            
+            OBTENER CELDA(,4) DE matrizA;         
+            
+            OBTENER CELDA(2,) DE matrizA;             
+            
+            OBTENER CELDA(1,2 DE matrizA;             
+            
+            OBTENER CELDA(1,2) matrizA;               
+            
+            OBTENER FILA DE matrizA;             
+            
+            OBTENER FILA 2 matrizA;               
+            
+            OBTENER COLUMNA (3) DE matrizA;           
+            
+            OBTENER COLUMNA 2 DE ;                  
+            
+            OBTENER CELDA(1+2, 3*) DE matrizA

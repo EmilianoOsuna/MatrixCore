@@ -120,7 +120,6 @@ public class AFD {
     }
 
     public static TipoToken determinarTipoLexema(String lexema) {
-        // ... (Mismo código de switches y regex que tenías antes) ...
         /* ===============================
            OPERADORES DE COMPARACIÓN
            =============================== */

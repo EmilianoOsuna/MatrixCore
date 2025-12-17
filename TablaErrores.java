@@ -16,7 +16,7 @@ public class TablaErrores {
     public static final int ERROR_SINTACTICO = 101; // Usado en AFD (palabra desconocida) y Parser (general)
     public static final int ERROR_CADENA_OPERANDO = 103;
     
-    // Errores Semánticos / Funciones
+    // Errores Funciones
     public static final int ERROR_ARGUMENTO_VACIO = 203;
     public static final int ERROR_TIPO_DATOS = 210;
     public static final int ERROR_FUNCION_INVALIDA = 211;
