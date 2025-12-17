@@ -1,6 +1,7 @@
 import com.formdev.flatlaf.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import javax.swing.text.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -186,12 +187,14 @@ public class CompiladorUI extends JFrame {
         tblErroresLexicos = new JTable(modeloErroresLexicos);
         tblErroresLexicos.setShowGrid(true);
         pestanasInferior.addTab("Errores Léxicos", new JScrollPane(tblErroresLexicos));
+        configurarTablaErrores(tblErroresLexicos);
 
         // Pestaña 3: Tabla Errores Sintácticos
         modeloErroresSintacticos = new DefaultTableModel(colsErr, 0);
         tblErroresSintacticos = new JTable(modeloErroresSintacticos);
         tblErroresSintacticos.setShowGrid(true);
         pestanasInferior.addTab("Errores Sintácticos", new JScrollPane(tblErroresSintacticos));
+        configurarTablaErrores(tblErroresSintacticos);  
         
         pestanasInferior.setMinimumSize(new Dimension(0, 150));
 
@@ -246,6 +249,11 @@ public class CompiladorUI extends JFrame {
             actualizarPaneles();
         });
 
+        // Botón Tema
+        JButton btnTema = new JButton("🌗");
+        btnTema.setToolTipText("Cambiar Tema");
+        btnTema.addActionListener(e -> cambiarTema());
+
         pnlBotones.add(btnTokens);
         pnlBotones.add(Box.createHorizontalStrut(5));
         pnlBotones.add(btnConsola);
@@ -255,6 +263,7 @@ public class CompiladorUI extends JFrame {
         pnlBotones.add(btnLimpiar);
         pnlBotones.add(btnAnalizar);
         pnlBotones.add(Box.createHorizontalStrut(10));
+        pnlBotones.add(btnTema);
 
         add(pnlBotones, BorderLayout.SOUTH);
     }
@@ -302,7 +311,7 @@ public class CompiladorUI extends JFrame {
         }
 
         if (consolaVisible) {
-            splitPrincipal.setBottomComponent(pestanasInferior); // AHORA USAMOS LAS PESTAÑAS
+            splitPrincipal.setBottomComponent(pestanasInferior);
             splitPrincipal.setDividerSize(10);
             if (splitPrincipal.getDividerLocation() == 0 || splitPrincipal.getDividerLocation() > getHeight() - 50) {
                  splitPrincipal.setDividerLocation(0.70);
@@ -327,13 +336,17 @@ public class CompiladorUI extends JFrame {
         raizActual = null; 
         btnVerArbol.setEnabled(false);
 
+        // Variables para conteo de errores
+        int contadorErroresLexicos = 0;
+        int contadorErroresSintacticos = 0;
+
         try {
             // 2. Tokenización
             Token[] tokensCrudos = Proyecto_Final_Automatas1.tokenizador(codigoFuente);
             AFD afd = Proyecto_Final_Automatas1.obtenerAFD(); 
             List<Token> tokensAnalizados = afd.aceptar(tokensCrudos);
 
-            // 3. Llenar tabla de tokens y Tabla de Errores Léxicos
+            // 3. Llenar tabla de tokens
             for (Token tk : tokensAnalizados) {
                 modeloTablaTokens.addRow(new Object[]{tk.getLexema(), tk.getTipo(), tk.getLinea()});
             }
@@ -341,16 +354,14 @@ public class CompiladorUI extends JFrame {
             // OBTENER ERRORES LÉXICOS DEL AFD
             Errores errLex = afd.getErrores();
             if (errLex.hayErrores()) {
+                contadorErroresLexicos = errLex.getErrores().size(); // <--- Guardamos cantidad
                 for (ErrorCompilacion err : errLex.getErrores()) {
                     modeloErroresLexicos.addRow(new Object[]{err.getNumero(), err.getLinea(), err.getDescripcion()});
                 }
-                pestanasInferior.setSelectedIndex(1); // Enfocar pestaña de errores léxicos
-                txtConsola.append("Se encontraron errores léxicos. Revisa la pestaña correspondiente.\n");
-                txtConsola.setForeground(colorError);
             }
 
             // 4. Filtrar tokens válidos para el Parser
-           Set<Integer> lineasConError = new HashSet<>();
+            Set<Integer> lineasConError = new HashSet<>();
             for (Token tk : tokensAnalizados) {
                 if (!tk.existeSimbolo()) {
                     lineasConError.add(tk.getLinea());
@@ -359,43 +370,29 @@ public class CompiladorUI extends JFrame {
 
             // Preparar tokens para parser: solo líneas sin errores
             List<Token> tokensParaParser = new ArrayList<>();
-            List<Token> tokensErrorLexico = new ArrayList<>();
-
             for (Token tk : tokensAnalizados) {
-                if (lineasConError.contains(tk.getLinea())) { 
-                    // Toda la línea se omite del análisis sintáctico
-                    tokensErrorLexico.add(tk);
-                } else {
+                if (!lineasConError.contains(tk.getLinea())) { 
                     tokensParaParser.add(tk);
                 }
             }
             
             // 5. Análisis Sintáctico
             if(tokensParaParser.size() < 1){
-                System.out.println("No hay ningún token válido como para realizar un análisis sintáctico");
-            }else{
+                if (!errLex.hayErrores()) {
+                     System.out.println("No hay tokens válidos para análisis sintáctico.");
+                }
+            } else {
                 ParserLL1 parser = new ParserLL1(tokensParaParser);
                 parser.inicio();
 
                 // 6. Llenar Tabla de Errores Sintácticos
                 if (parser.errores.hayErrores()) {
+                    contadorErroresSintacticos = parser.errores.getErrores().size(); // <--- Guardamos cantidad
                     for (ErrorCompilacion err : parser.errores.getErrores()) {
                         modeloErroresSintacticos.addRow(new Object[]{err.getNumero(), err.getLinea(), err.getDescripcion()});
                     }
-                    
-                    txtConsola.append("Se encontraron errores sintácticos.\n");
-                    if (!errLex.hayErrores()) {
-                        // Si no hubo errores léxicos pero sí sintácticos, enfocar sintácticos
-                        pestanasInferior.setSelectedIndex(2);
-                        txtConsola.setForeground(colorError);
-                    }
                 } else if (!errLex.hayErrores()) {
-                    // Si no hay errores de ningún tipo
-                    txtConsola.append("COMPILACIÓN EXITOSA.\nNo se encontraron errores.");
-                    txtConsola.setForeground(colorExito); 
-                    pestanasInferior.setSelectedIndex(0); // Enfocar consola
-                    
-                    // Generar Árbol
+                    // Si no hay errores de ningún tipo, generar árbol
                     raizActual = parser.getRaiz();
                     if (raizActual != null) {
                         btnVerArbol.setEnabled(true);
@@ -403,6 +400,31 @@ public class CompiladorUI extends JFrame {
                 }
             }
             
+            // ---------------------------------------------------------
+            // 7. GENERACIÓN DEL REPORTE FINAL EN CONSOLA
+            // ---------------------------------------------------------
+            StringBuilder reporte = new StringBuilder();
+            reporte.append("=== REPORTE DE COMPILACIÓN ===\n\n");
+            
+            if (contadorErroresLexicos == 0 && contadorErroresSintacticos == 0) {
+                // --- CASO DE ÉXITO ---
+                reporte.append("COMPILACIÓN EXITOSA\n");
+                reporte.append("No se encontraron errores en el código.\n");
+                txtConsola.setForeground(colorExito); 
+            } else {
+                // --- CASO CON ERRORES ---
+                reporte.append("SE ENCONTRARON ERRORES\n\n");
+                reporte.append(String.format("• Errores Léxicos:     %d\n", contadorErroresLexicos));
+                reporte.append(String.format("• Errores Sintácticos: %d\n", contadorErroresSintacticos));
+                reporte.append("\nRevise las pestañas de errores para ver el detalle.");
+                
+                txtConsola.setForeground(colorError);
+            }
+            
+            txtConsola.setText(reporte.toString());
+            
+            // --- SIEMPRE ENFOCAR LA CONSOLA AL FINAL ---
+            pestanasInferior.setSelectedIndex(0); 
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -461,6 +483,25 @@ public class CompiladorUI extends JFrame {
         menuArchivo.add(itemAbrir);
         menuBar.add(menuArchivo);
         setJMenuBar(menuBar);
+    }
+
+    // --- CONFIGURACIÓN DE COLUMNAS DE ERRORES ---
+    private void configurarTablaErrores(JTable tabla) {
+        // Esto es clave: le dice a la tabla que solo la última columna se estire
+        tabla.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        
+        TableColumnModel columnModel = tabla.getColumnModel();
+        
+        // Columna 0: Código Error (La hacemos fija y angosta)
+        columnModel.getColumn(0).setPreferredWidth(70);
+        columnModel.getColumn(0).setMaxWidth(90);
+        
+        // Columna 1: Línea (Aún más angosta)
+        columnModel.getColumn(1).setPreferredWidth(50);
+        columnModel.getColumn(1).setMaxWidth(70);
+        
+        // La Columna 2 (Descripción) no se toca aquí, 
+        // por lo que tomará todo el ancho sobrante gracias a AUTO_RESIZE_LAST_COLUMN.
     }
 
     public static void main(String[] args) {

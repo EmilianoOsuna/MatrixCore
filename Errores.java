@@ -9,8 +9,20 @@ public class Errores {
         listaErrores = new ArrayList<>();
     }
 
-    public void agregarError(int numero, int linea, String descripcion) {
-        listaErrores.add(new ErrorCompilacion(numero, linea, descripcion));
+    // --- MÉTODO ACTUALIZADO ---
+    public void agregarError(int codigo, int linea, String detalleEspecifico) {
+        // 1. Título base desde la tabla
+        String titulo = TablaErrores.getMensaje(codigo);
+        
+        // 2. Concatenación con tu mensaje detallado
+        String descripcionFinal;
+        if (detalleEspecifico != null && !detalleEspecifico.isEmpty()) {
+            descripcionFinal = titulo + " " + detalleEspecifico;
+        } else {
+            descripcionFinal = titulo;
+        }
+
+        listaErrores.add(new ErrorCompilacion(codigo, linea, descripcionFinal));
     }
 
     public boolean hayErrores() {
@@ -37,4 +49,3 @@ public class Errores {
         System.out.println("--------------------------------------------------");
     }
 }
-

@@ -78,7 +78,7 @@ public class ParserLL1 {
             pos++;
             return hoja;
         } else {
-                errores.agregarError(101, tokens.get(pos - 1).getLinea(),msg );
+                errores.agregarError(TablaErrores.ERROR_SINTACTICO, tokens.get(pos - 1).getLinea(),msg );
                 panico();
                 return null;
         }
@@ -109,7 +109,7 @@ inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicion
                 raizArbol.agregarHijo(condicional());
                 break;
             default:
-                errores.agregarError(1,
+                errores.agregarError(TablaErrores.ERROR_INICIAL,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se espera una acción inicial como CREAR, MODIFICAR, OBTENER en vez de: " + tokenActual().getLexema()
                 );
@@ -140,7 +140,7 @@ inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicion
                 nodo = condicional();
                 break;
             default:
-                errores.agregarError(1,
+                errores.agregarError(TablaErrores.ERROR_INICIAL,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se espera una acción inicial como CREAR, MODIFICAR, OBTENER en vez de: " + tokenActual().getLexema()
                 );
@@ -159,7 +159,7 @@ prCrear() → prCadena() | prNum() | prVector() | prMatriz()
     private NodoArbol prCrear() {
 
         if (tokenActual().getTipo() != TipoToken.PR_CREAR) {
-            errores.agregarError(101,tokenActual().getLinea(),"Se esperaba 'CREAR'");
+            errores.agregarError(TablaErrores.ERROR_SINTACTICO,tokenActual().getLinea(),"Se esperaba 'CREAR'");
             panico();
             return null;
         }
@@ -187,7 +187,7 @@ prCrear() → prCadena() | prNum() | prVector() | prMatriz()
                 break;
 
             default:
-                errores.agregarError(1,
+                errores.agregarError(TablaErrores.ERROR_INICIAL,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se espera un tipo de variable a crear, por ejemplo: CADENA, NUM, VECTOR o MATRIZ"
                 );
@@ -259,7 +259,7 @@ operandoCadena() → CADENA
 
             default:
                 errores.agregarError(
-                    103,
+                    TablaErrores.ERROR_CADENA_OPERANDO,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se esperaba una cadena, un identificador o una expresión numérica"
                     + " entre paréntesis después de '" + tokenAnterior().getLexema() + "'"
@@ -468,7 +468,7 @@ operandoSimple() → expresionNumerica()
 
             default:
                 errores.agregarError(
-                    210,
+                    TablaErrores.ERROR_TIPO_DATOS,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se esperaba un número real, un identificador, "
                     + "una función numérica o una expresión entre paréntesi después de : '"
@@ -552,7 +552,7 @@ operandoSimple() → expresionNumerica()
 
             default:
                 errores.agregarError(
-                    211,
+                    TablaErrores.ERROR_FUNCION_INVALIDA,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se esperaba una función numérica válida."
                 );
@@ -615,10 +615,10 @@ operandoSimple() → expresionNumerica()
 
             default: 
                 if(tokenAnterior().getLexema().equals("(") && tokenActual().getLexema().equals(")")){ 
-                    errores.agregarError( 203, lFinal ?  lineaFinal : tokenActual().getLinea(),
+                    errores.agregarError( TablaErrores.ERROR_ARGUMENTO_VACIO, lFinal ?  lineaFinal : tokenActual().getLinea(),
                             "El argumento de la función no debe estar vacío." );
                 } 
-                else{ errores.agregarError( 203, lFinal ?  lineaFinal : tokenActual().getLinea(), 
+                else{ errores.agregarError( TablaErrores.ERROR_ARGUMENTO_VACIO, lFinal ?  lineaFinal : tokenActual().getLinea(), 
                         "El argumento de la función debe ser un número real, un identificador o una expresión numérica válida.");
                         }
                 panico();
@@ -698,9 +698,9 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
 
                     default:
                         errores.agregarError(
-                            310,
+                            TablaErrores.ERROR_OBTENER_OPCION,
                             lFinal ? lineaFinal : tokenActual().getLinea(),
-                            "Después de 'OBTENER' se esperaba FILA o COLUMNA."
+                            "Después de 'OBTENER' se espera FILA o COLUMNA."
                         );
                         panico();
                         return null;
@@ -709,7 +709,7 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
 
             default:
                 errores.agregarError(
-                    309,
+                    TablaErrores.ERROR_VECTOR_DEF,
                     lFinal ? lineaFinal : tokenActual().getLinea(),
                     "Se esperaba una definición de vector: "
                   + "un vector literal [ ... ] o una obtención con OBTENER FILA/COLUMNA."
@@ -731,7 +731,7 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
         // Validando que el vector sea de al menos dos elementos
         if (tokenActual().getTipo() != TipoToken.COMA) {
             errores.agregarError(
-                401,
+                TablaErrores.ERROR_MATRIZ_DIMENSION,
                 lFinal ?  lineaFinal : tokenActual().getLinea(),
                 "Un vector debe contener al menos dos elementos (n ≥ 2). Debe estar expresado de la siguiente forma: VECTOR[a,b]"
             );
@@ -826,7 +826,7 @@ operacionEspecial()
 
             default:
                 errores.agregarError(
-                    420,
+                    TablaErrores.ERROR_OPERACION_ESPECIAL,
                     tokenActual().getLinea(),
                     "Se esperaba una operación especial de matriz como TRANSPUESTA, INVERSA, ADJUNTA, COFACTORES, GAUSS o GAUSSJ."
                 );
@@ -927,7 +927,7 @@ tamañoMatriz()
 
             default:
                 errores.agregarError(
-                    400,
+                    TablaErrores.ERROR_MATRIZ_DEF,
                     lFinal ? lineaFinal : tokenActual().getLinea(),
                     "Se esperaba un tipo de matriz (IDENTIDAD, DIAGONAL, CEROS, UNOS) "
                     + "o una definición normal con TAMAÑO(filas,columnas)."
@@ -947,7 +947,7 @@ tamañoMatriz()
         if (tokenActual().getTipo() != TipoToken.PUNTO_Y_COMA){
             if (panicoUsado) return null;
             errores.agregarError(
-                    401,
+                    TablaErrores.ERROR_MATRIZ_DIMENSION,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "En una matriz definida por tipo y tamaño se espera un ';' después de el identificador para dar fin a su declaración."
                 );
@@ -973,7 +973,7 @@ tamañoMatriz()
 
             default:
                 errores.agregarError(
-                    401,
+                    TablaErrores.ERROR_MATRIZ_DIMENSION,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Tipo de matriz inválido. Se esperaba IDENTIDAD, DIAGONAL, CEROS o UNOS."
                 );
@@ -1047,7 +1047,7 @@ tamañoMatriz()
             
             default:
                 errores.agregarError(
-                    450,
+                    TablaErrores.ERROR_MATRIZ_OPERACION,
                     tokenActual().getLinea(),
                     "Se esperaba una matriz literal '[...]' o una operación entre matrices."
                 );
@@ -1064,7 +1064,7 @@ tamañoMatriz()
         if(tokenActual().getTipo() != TipoToken.COMA){
             if(panicoUsado) return null;
             errores.agregarError(
-                    401,
+                    TablaErrores.ERROR_MATRIZ_DIMENSION,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se espera que se declare una matriz con al menos dos filas, ya que si solo cuenta con una fila, entonces sería un vector."
                 );
@@ -1110,7 +1110,7 @@ tamañoMatriz()
         if(tokenActual().getTipo() != TipoToken.COMA){
             if(panicoUsado) return null;
             errores.agregarError(
-                    401,
+                    TablaErrores.ERROR_MATRIZ_DIMENSION,
                     lFinal ?  lineaFinal : tokenActual().getLinea(),
                     "Se espera que se declare una matriz con al menos dos columnas, ya que si solo cuenta con una columna, entonces sería un vector."
                 );
@@ -1250,7 +1250,7 @@ metodoDeterminante()
                             break;
                         default:
                             errores.agregarError(
-                                460,
+                                TablaErrores.ERROR_METODO_DETERMINANTE,
                                 tokenActual().getLinea(),
                                 "Método de determinante inválido. Se esperaba COFACTORES, GAUSS o SARRUS."
                             );
@@ -1262,7 +1262,7 @@ metodoDeterminante()
 
             default:
                 errores.agregarError(
-                    461,
+                    TablaErrores.ERROR_PROPIEDAD_NUMERICA,
                     tokenActual().getLinea(),
                     "Se esperaba una propiedad numérica de matriz: RANGO o DETERMINANTE."
                 );
@@ -1318,7 +1318,7 @@ metodoDeterminante()
 
             default:
                 errores.agregarError(
-                    500,
+                    TablaErrores.ERROR_ACCION_INVALIDA,
                     lFinal ? lineaFinal : tokenActual().getLinea(),
                     "Se esperaba una operación válida de vector (PPUNTO, CRUZ, NORMALIZAR, MAGNITUD), pero se encontró: '" 
                     + tokenActual().getLexema() + "'."
@@ -1371,7 +1371,7 @@ prMostrar() → expresionCadena() | accion() ';'
 
             default:
                 errores.agregarError(
-                    450,
+                    TablaErrores.ERROR_MATRIZ_OPERACION,
                     tokenActual().getLinea(),
                     "Se esperaba una cadena literal, un identificador, una expresión entre paréntesis, o una acción válida (propiedad numérica, operación especial o operación vectorial)."
                 );
@@ -1419,7 +1419,7 @@ prMostrar() → expresionCadena() | accion() ';'
 
             default:
                 errores.agregarError(
-                    500,
+                    TablaErrores.ERROR_ACCION_INVALIDA,
                     tokenActual().getLinea(),
                     "Se esperaba una propiedad numérica (RANGO, DETERMINANTE), una operación especial de matriz (TRANSPUESTA, INVERSA, ADJUNTA, COFACTORES, GAUSS, GAUSSJ), o "
                             + "una operación vectorial después" 
@@ -1485,7 +1485,7 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
 
             default:
                 errores.agregarError(
-                    500,
+                    TablaErrores.ERROR_ACCION_INVALIDA,
                     lFinal ? lineaFinal : tokenActual().getLinea(),
                     "Se esperaba una acción válida sobre la matriz: "
                     + "CELDA(i,j), AGREGAR FILA/COLUMNA, ELIMINAR FILA/COLUMNA "
@@ -1544,7 +1544,7 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
             tokenActual().getTipo() != TipoToken.PR_COLUMNA) {
 
             errores.agregarError(
-                501,
+                TablaErrores.ERROR_AGREGAR_INVALIDO,
                 tokenActual().getLinea(),
                 "Después de AGREGAR se espera FILA o COLUMNA."
             );
@@ -1577,7 +1577,7 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
             tokenActual().getTipo() != TipoToken.PR_COLUMNA) {
 
             errores.agregarError(
-                502,
+                TablaErrores.ERROR_ELIMINAR_INVALIDO,
                 tokenActual().getLinea(),
                 "Después de ELIMINAR se espera FILA o COLUMNA."
             );
@@ -1669,7 +1669,7 @@ obtenerColumna() → COLUMNA expresionNumerica() DE IDENTIFICADOR
 
             default:
                 errores.agregarError(
-                    500,
+                    TablaErrores.ERROR_ACCION_INVALIDA,
                     lFinal ? lineaFinal : tokenActual().getLinea(),
                     "Se esperaba CELDA, FILA o COLUMNA después de 'OBTENER'."
                 );
@@ -1817,7 +1817,7 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
                 break;
             default:
                 errores.agregarError(
-                    500,
+                    TablaErrores.ERROR_ACCION_INVALIDA,
                     tokenActual().getLinea(),
                     "Se esperaba un operando numérico o cadena para la condición, pero se encontró: '" + tokenActual().getLexema() + "'."
                 );
@@ -1840,7 +1840,7 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
                 break;
             default:
                 errores.agregarError(
-                    501,
+                    TablaErrores.ERROR_AGREGAR_INVALIDO,
                     tokenActual().getLinea(),
                     "Se esperaba un segundo operando numérico o cadena para la condición, pero se encontró: '" + tokenActual().getLexema() + "'."
                 );
@@ -1864,7 +1864,7 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
                 break;
             default:
                 errores.agregarError(
-                    502,
+                    TablaErrores.ERROR_ELIMINAR_INVALIDO,
                     tokenActual().getLinea(),
                     "Se esperaba un operador de comparación (==, !=, >, <, >=, <=) en la condición, pero se encontró: '" + tokenActual().getLexema() + "'."
                 );
@@ -1884,7 +1884,7 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
         if (panicoUsado) return;
         if (tokenActual().getTipo() == TipoToken.COMA) {
             errores.agregarError(
-                401,
+                TablaErrores.ERROR_MATRIZ_DIMENSION,
                 lFinal ?  lineaFinal : tokenActual().getLinea(),
                 msg
             );
@@ -1896,7 +1896,7 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
         if (panicoUsado) return;
         if (tokenActual().getTipo() == tk1) {
             errores.agregarError(
-                210,
+                TablaErrores.ERROR_TIPO_DATOS,
                 lFinal ?  lineaFinal : tokenActual().getLinea(),
                 msg1
             );
@@ -1906,7 +1906,7 @@ operadorComparacion() → '==' | '!=' | '>' | '<' | '>=' | '<='
 
         if (tokenActual().getTipo() == tk2) {
             errores.agregarError(
-                210,
+                TablaErrores.ERROR_TIPO_DATOS,
                 lFinal ?  lineaFinal : tokenActual().getLinea(),
                 msg2
             );
