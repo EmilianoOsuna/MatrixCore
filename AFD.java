@@ -11,7 +11,7 @@ public class AFD {
     private String estadoInicial;
     private Set<String> estadosAceptacion;
     
-    // NUEVA INSTANCIA PARA ERRORES LÉXICOS
+    //I stancia para errores léxicos
     private Errores erroresLexicos = new Errores();
 
     public AFD(Set<String> estados,
@@ -120,10 +120,7 @@ public class AFD {
     }
 
     public static TipoToken determinarTipoLexema(String lexema) {
-        // ... (Mismo código de switches y regex que tenías antes) ...
-        /* ===============================
-           OPERADORES DE COMPARACIÓN
-           =============================== */
+//OPERADORES DE COMPARACIÓN
         switch (lexema) {
             case "==": return TipoToken.OP_IGUAL;
             case "!=": return TipoToken.OP_DIFERENTE;
@@ -133,7 +130,7 @@ public class AFD {
             case ">=": return TipoToken.OP_MAYOR_IGUAL;
         }
 
-        /* OPERADORES ARITMÉTICOS */
+        //OPERADORES ARITMÉTICOS 
         switch (lexema) {
             case "+": return TipoToken.OP_SUMA;
             case "-": return TipoToken.OP_RESTA;
@@ -141,7 +138,7 @@ public class AFD {
             case "/": return TipoToken.OP_DIV;
         }
 
-        /* DELIMITADORES */
+        // DELIMITADORES 
         if (lexema.equals("(")) return TipoToken.PARENT_IZQ;
         if (lexema.equals(")")) return TipoToken.PARENT_DER;
         if (lexema.equals("[")) return TipoToken.CORCHETE_IZQ;
@@ -151,7 +148,7 @@ public class AFD {
         if (lexema.equals("_")) return TipoToken.GUION_BAJO;
         if (lexema.equals("=")) return TipoToken.ASIGNACION;
 
-        /* LITERALES */
+        //LITERALES 
         if (lexema.matches("^\"[^\"]*\"$")) return TipoToken.CADENA;
         if (lexema.matches("^[+-]?(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?$")) return TipoToken.NUMERO_REAL;
         if (lexema.matches("^[A-Za-zÑñ][A-Za-z0-9Ññ_]*$")) return TipoToken.IDENTIFICADOR;

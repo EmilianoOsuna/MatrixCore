@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 public class CompiladorUI extends JFrame {
 
-    // --- COMPONENTES GLOBALES ---
+    // COMPONENTES GLOBALES
     private JTextPane txtEntrada; 
     
     // Componentes para la zona inferior (Pestañas)
@@ -132,7 +132,7 @@ public class CompiladorUI extends JFrame {
     }
 
     private void inicializarComponentes() {
-        // --- 1. Panel de Código ---
+        // 1. Panel de Código
         JPanel pnlCodigo = new JPanel(new BorderLayout());
         pnlCodigo.setBorder(BorderFactory.createTitledBorder("Código Fuente"));
         
@@ -158,7 +158,7 @@ public class CompiladorUI extends JFrame {
         try { scrollCodigo.setRowHeaderView(new TextLineNumber(txtEntrada)); } catch (Exception e) {}
         pnlCodigo.add(scrollCodigo, BorderLayout.CENTER);
 
-        // --- 2. Panel Tabla Tokens ---
+        // 2. Panel Tabla Tokens 
         pnlTabla = new JPanel(new BorderLayout());
         pnlTabla.setBorder(BorderFactory.createTitledBorder("Tabla de Tokens"));
         String[] columnasTokens = {"Lexema", "Tipo de Token", "Línea"};
@@ -171,7 +171,7 @@ public class CompiladorUI extends JFrame {
         scrollTabla = new JScrollPane(tblTokens); 
         pnlTabla.add(scrollTabla, BorderLayout.CENTER);
 
-        // --- 3. Panel Inferior (Pestañas de Errores y Consola) ---
+        //  3. Panel Inferior (Pestañas de Errores y Consola) 
         pestanasInferior = new JTabbedPane();
         
         // Pestaña 1: Consola General
@@ -198,7 +198,7 @@ public class CompiladorUI extends JFrame {
         
         pestanasInferior.setMinimumSize(new Dimension(0, 150));
 
-        // --- Splits ---
+        //  Splits 
         splitSuperior = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitSuperior.setLeftComponent(pnlCodigo); 
         splitSuperior.setResizeWeight(0.7); 
@@ -212,7 +212,7 @@ public class CompiladorUI extends JFrame {
 
         add(splitPrincipal, BorderLayout.CENTER);
 
-        // --- Botones ---
+        // Botones 
         JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         btnTokens = new JToggleButton("📊 Ver Tokens", false);
@@ -400,9 +400,7 @@ public class CompiladorUI extends JFrame {
                 }
             }
             
-            // ---------------------------------------------------------
             // 7. GENERACIÓN DEL REPORTE FINAL EN CONSOLA
-            // ---------------------------------------------------------
             StringBuilder reporte = new StringBuilder();
             reporte.append("=== REPORTE DE COMPILACIÓN ===\n\n");
             
@@ -483,7 +481,7 @@ public class CompiladorUI extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    // --- CONFIGURACIÓN DE COLUMNAS DE ERRORES ---
+    // CONFIGURACIÓN DE COLUMNAS DE ERRORES -
     private void configurarTablaErrores(JTable tabla) {
         tabla.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         
