@@ -34,10 +34,6 @@ public class Errores {
     }
 
     public void imprimirTabla() {
-        System.out.println("--------------------------------------------------");
-        System.out.printf("%-10s %-10s %-30s%n", "ERROR", "LINEA", "DESCRIPCIÓN");
-        System.out.println("--------------------------------------------------");
-
         for (ErrorCompilacion e : listaErrores) {
             System.out.printf(
                 "%-10d %-10d %-30s%n",
@@ -46,6 +42,5 @@ public class Errores {
                 e.getDescripcion()
             );
         }
-        System.out.println("--------------------------------------------------");
     }
 }

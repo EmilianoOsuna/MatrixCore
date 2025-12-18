@@ -10,13 +10,13 @@ public class PanelArbol extends JPanel {
     private final int V_GAP = 70;      // Espacio vertical entre niveles
     private final int H_GAP = 20;      // Espacio horizontal mínimo entre nodos
 
-    // Mapas para guardar las posiciones calculadas (para no recalcular al pintar)
+    // Mapas para guardar las posiciones calculadas
     private Map<NodoArbol, Point> posiciones = new HashMap<>();
     private Map<NodoArbol, Integer> anchosSubarbol = new HashMap<>();
 
     public PanelArbol(NodoArbol raiz) {
         this.raiz = raiz;
-        this.setBackground(new Color(30, 30, 30)); // Fondo oscuro por defecto
+        this.setBackground(new Color(30, 30, 30)); 
         calcularPosiciones();
     }
 
@@ -133,12 +133,9 @@ public class PanelArbol extends JPanel {
         
         // Si el texto es muy largo, lo recortamos para que no se salga del círculo
         if (fm.stringWidth(texto) > DIAMETRO - 5) {
-             // Opción A: Recortar
-             // texto = texto.substring(0, Math.min(texto.length(), 4)) + "..";
-             // Opción B: Dibujarlo encima flotando (mejor para leer)
              g.drawString(texto, p.x - fm.stringWidth(texto) / 2, p.y - RADIO - 5);
         } else {
-             // Dibujar centrado dentro del círculo
+             // Se dibuja centrado dentro del círculo
              g.drawString(texto, p.x - fm.stringWidth(texto) / 2, p.y + fm.getAscent() / 2 - 2);
         }
         

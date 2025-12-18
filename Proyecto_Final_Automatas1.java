@@ -678,8 +678,7 @@ public class Proyecto_Final_Automatas1 {
                 tk.existeSimbolo() ? "Sí" : "No"
             );
         }
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            ///ANÁLISIS SINTÁCTICO:
+            //ANÁLISIS SINTÁCTICO:
             List<Token> tokensParaParser = new ArrayList();
             for(Token tkParser:tablaSimbolos){
                 if(tkParser.existeSimbolo()){
@@ -738,7 +737,7 @@ public class Proyecto_Final_Automatas1 {
                             break;
                         }
 
-                        // SIEMPRE conservar saltos de línea
+                        // Siempre conservar saltos de línea
                         if (entrada.charAt(i) == '\n') {
                             salida.append('\n');
                         }
@@ -775,7 +774,7 @@ public class Proyecto_Final_Automatas1 {
             for (int i = 0; i < entrada.length(); i++) {
                 char c = entrada.charAt(i);
 
-                // INICIO / FIN de cadena
+                // Inicio / Fin de cadena
                 if (c == '"') {
                     actual.append(c);
                     enCadena = !enCadena;
@@ -840,7 +839,7 @@ public class Proyecto_Final_Automatas1 {
             // Eliminar comentarios antes de procesar
             entrada = eliminarComentarios(entrada);
             String[] lineas = entrada.split("\n");
-            Token[] tokensTemp = new Token[10000]; // capacidad grande temporal
+            Token[] tokensTemp = new Token[10000]; // capacidad temporal
             int contador = 0;
 
             int numLinea = 1;

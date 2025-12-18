@@ -12,15 +12,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CompiladorUI extends JFrame {
 
-    // --- COMPONENTES GLOBALES ---
+    // COMPONENTES GLOBALES
     private JTextPane txtEntrada; 
     
     // Componentes para la zona inferior (Pestañas)
@@ -132,7 +134,7 @@ public class CompiladorUI extends JFrame {
     }
 
     private void inicializarComponentes() {
-        // --- 1. Panel de Código ---
+        // 1. Panel de Código
         JPanel pnlCodigo = new JPanel(new BorderLayout());
         pnlCodigo.setBorder(BorderFactory.createTitledBorder("Código Fuente"));
         
@@ -158,7 +160,7 @@ public class CompiladorUI extends JFrame {
         try { scrollCodigo.setRowHeaderView(new TextLineNumber(txtEntrada)); } catch (Exception e) {}
         pnlCodigo.add(scrollCodigo, BorderLayout.CENTER);
 
-        // --- 2. Panel Tabla Tokens ---
+        // 2. Panel Tabla Tokens 
         pnlTabla = new JPanel(new BorderLayout());
         pnlTabla.setBorder(BorderFactory.createTitledBorder("Tabla de Tokens"));
         String[] columnasTokens = {"Lexema", "Tipo de Token", "Línea"};
@@ -171,7 +173,7 @@ public class CompiladorUI extends JFrame {
         scrollTabla = new JScrollPane(tblTokens); 
         pnlTabla.add(scrollTabla, BorderLayout.CENTER);
 
-        // --- 3. Panel Inferior (Pestañas de Errores y Consola) ---
+        //  3. Panel Inferior (Pestañas de Errores y Consola) 
         pestanasInferior = new JTabbedPane();
         
         // Pestaña 1: Consola General
@@ -198,7 +200,7 @@ public class CompiladorUI extends JFrame {
         
         pestanasInferior.setMinimumSize(new Dimension(0, 150));
 
-        // --- Splits ---
+        //  Splits 
         splitSuperior = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitSuperior.setLeftComponent(pnlCodigo); 
         splitSuperior.setResizeWeight(0.7); 
@@ -212,7 +214,7 @@ public class CompiladorUI extends JFrame {
 
         add(splitPrincipal, BorderLayout.CENTER);
 
-        // --- Botones ---
+        // Botones 
         JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         btnTokens = new JToggleButton("📊 Ver Tokens", false);
@@ -400,9 +402,7 @@ public class CompiladorUI extends JFrame {
                 }
             }
             
-            // ---------------------------------------------------------
             // 7. GENERACIÓN DEL REPORTE FINAL EN CONSOLA
-            // ---------------------------------------------------------
             StringBuilder reporte = new StringBuilder();
             reporte.append("=== REPORTE DE COMPILACIÓN ===\n\n");
             
@@ -479,11 +479,72 @@ public class CompiladorUI extends JFrame {
             }
         });
         menuArchivo.add(itemAbrir);
+
+        // Menú de ayuda para catálogo de errores
+        JMenu menuAyuda = new JMenu("Ayuda");
+        JMenuItem itemErrores = new JMenuItem("Catálogo de Errores");
+        itemErrores.addActionListener(e -> mostrarCatalogoErrores());
+        menuAyuda.add(itemErrores);
+
         menuBar.add(menuArchivo);
+        menuBar.add(menuAyuda);
+        
         setJMenuBar(menuBar);
     }
 
-    // --- CONFIGURACIÓN DE COLUMNAS DE ERRORES ---
+    private void mostrarCatalogoErrores() {
+    
+        JDialog dialog = new JDialog(this, "Catálogo de Errores del Sistema", true);
+        dialog.setSize(600, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        // Modelo de datos para la tabla
+        String[] columnas = {"Código", "Descripción Base"};
+        DefaultTableModel modelCatalogo = new DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Que no se pueda editar
+            }
+        };
+
+        // Se obtienen los errores y se ordenan por código
+        Map<Integer, String> mapa = TablaErrores.getMapaErrores();
+        List<Integer> codigosOrdenados = new ArrayList<>(mapa.keySet());
+        Collections.sort(codigosOrdenados);
+
+        // Se llena la tabla
+        for (Integer codigo : codigosOrdenados) {
+            modelCatalogo.addRow(new Object[]{codigo, mapa.get(codigo)});
+        }
+
+        // Se configura la tabla visualmente
+        JTable tablaCatalogo = new JTable(modelCatalogo);
+        tablaCatalogo.getColumnModel().getColumn(0).setMaxWidth(100); 
+        tablaCatalogo.getColumnModel().getColumn(0).setPreferredWidth(80);
+        tablaCatalogo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tablaCatalogo.setRowHeight(25);
+
+        JScrollPane scroll = new JScrollPane(tablaCatalogo);
+        scroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JLabel lblTitulo = new JLabel(" Total de errores controlados: " + mapa.size());
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTitulo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        dialog.add(lblTitulo, BorderLayout.NORTH);
+        dialog.add(scroll, BorderLayout.CENTER);
+
+        JButton btnCerrar = new JButton("Cerrar");
+        btnCerrar.addActionListener(e -> dialog.dispose());
+        JPanel pnlBtn = new JPanel();
+        pnlBtn.add(btnCerrar);
+        dialog.add(pnlBtn, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+    // CONFIGURACIÓN DE COLUMNAS DE ERRORES 
     private void configurarTablaErrores(JTable tabla) {
         tabla.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         
