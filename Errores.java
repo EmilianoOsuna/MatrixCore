@@ -9,7 +9,7 @@ public class Errores {
         listaErrores = new ArrayList<>();
     }
 
-    // --- AGREGAR ERROR ---
+    //  AGREGAR ERROR 
     public void agregarError(int codigo, int linea, String detalleEspecifico) {
         //Título base desde la tabla
         String titulo = TablaErrores.getMensaje(codigo);

@@ -7,10 +7,15 @@ import javax.swing.event.*;
 import javax.swing.text.*;
 
 /**
- * Esta clase mostrará números de línea para un componente de texto relacionado. El componente
- * de texto debe usar la misma altura de línea para cada línea. TextLineNumber
- * soporta líneas ajustadas (wrapped) y resaltará el número de línea de la línea
- * actual en el componente de texto.
+ * 
+ * NOTA: Esta clase fue tomada de:
+ *  https://tips4java.wordpress.com/2009/05/23/text-component-line-number
+ * 
+ * 
+ *  This class will display line numbers for a related text component. The text
+ *  component must use the same line height for each line. TextLineNumber
+ *  supports wrapped lines and will highlight the line number of the current
+ *  line in the text component.
  *
  * Esta clase fue diseñada para ser usada como un componente agregado a la cabecera de fila (row header)
  * de un JScrollPane.

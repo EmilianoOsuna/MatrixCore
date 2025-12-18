@@ -459,6 +459,8 @@ public class CompiladorUI extends JFrame {
 
     private void crearMenu() {
         JMenuBar menuBar = new JMenuBar();
+        
+        // MENÚ ARCHIVO para poder abrir archivos
         JMenu menuArchivo = new JMenu("Archivo");
         JMenuItem itemAbrir = new JMenuItem("Abrir...");
         itemAbrir.addActionListener(e -> {
@@ -479,10 +481,10 @@ public class CompiladorUI extends JFrame {
             }
         });
         menuArchivo.add(itemAbrir);
-
-        // Menú de ayuda para catálogo de errores
+        
+        // MENÚ AYUDA para visualizar catálogo de errores
         JMenu menuAyuda = new JMenu("Ayuda");
-        JMenuItem itemErrores = new JMenuItem("Catálogo de Errores");
+        JMenuItem itemErrores = new JMenuItem("📚 Catálogo de Errores");
         itemErrores.addActionListener(e -> mostrarCatalogoErrores());
         menuAyuda.add(itemErrores);
 
@@ -493,18 +495,17 @@ public class CompiladorUI extends JFrame {
     }
 
     private void mostrarCatalogoErrores() {
-    
         JDialog dialog = new JDialog(this, "Catálogo de Errores del Sistema", true);
         dialog.setSize(600, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
 
-        // Modelo de datos para la tabla
+        // Definimos el modelo de datos para la tabla
         String[] columnas = {"Código", "Descripción Base"};
         DefaultTableModel modelCatalogo = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Que no se pueda editar
+                return false; // No se podrá editar
             }
         };
 
@@ -513,21 +514,20 @@ public class CompiladorUI extends JFrame {
         List<Integer> codigosOrdenados = new ArrayList<>(mapa.keySet());
         Collections.sort(codigosOrdenados);
 
-        // Se llena la tabla
+        // Llenar la tabla
         for (Integer codigo : codigosOrdenados) {
             modelCatalogo.addRow(new Object[]{codigo, mapa.get(codigo)});
         }
 
-        // Se configura la tabla visualmente
+        // Configurar la tabla visualmente
         JTable tablaCatalogo = new JTable(modelCatalogo);
-        tablaCatalogo.getColumnModel().getColumn(0).setMaxWidth(100); 
+        tablaCatalogo.getColumnModel().getColumn(0).setMaxWidth(100); // Columna código angosta
         tablaCatalogo.getColumnModel().getColumn(0).setPreferredWidth(80);
         tablaCatalogo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tablaCatalogo.setRowHeight(25);
 
         JScrollPane scroll = new JScrollPane(tablaCatalogo);
         scroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
         JLabel lblTitulo = new JLabel(" Total de errores controlados: " + mapa.size());
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblTitulo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

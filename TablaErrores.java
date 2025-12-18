@@ -3,7 +3,7 @@ import java.util.Map;
 
 public class TablaErrores {
 
-    // CÓDIGOS DE ERROR  
+    // CÓDIGOS DE ERROR
     public static final int ERROR_INICIAL = 1;
     public static final int ERROR_SINTACTICO = 101;
     public static final int ERROR_CADENA_OPERANDO = 103;
@@ -34,8 +34,7 @@ public class TablaErrores {
         mapaErrores.put(ERROR_INICIAL, "Error de inicio de instrucción.");
         mapaErrores.put(ERROR_SINTACTICO, "Error sintáctico."); 
         mapaErrores.put(ERROR_CADENA_OPERANDO, "Error en expresión de cadena.");
-
-        // Numéricos
+        
         mapaErrores.put(ERROR_ARGUMENTO_VACIO, "Argumento inválido.");
         mapaErrores.put(ERROR_TIPO_DATOS, "Error de tipos.");
         mapaErrores.put(ERROR_FUNCION_INVALIDA, "Función numérica no reconocida.");
@@ -58,5 +57,10 @@ public class TablaErrores {
 
     public static String getMensaje(int codigo) {
         return mapaErrores.getOrDefault(codigo, "Error desconocido");
+    }
+
+    // Mapa completo para la interfaz
+    public static Map<Integer, String> getMapaErrores() {
+        return mapaErrores;
     }
 }
