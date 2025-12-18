@@ -3,7 +3,7 @@ import java.util.Map;
 
 public class TablaErrores {
 
-    // --- CÓDIGOS DE ERROR (CONSTANTES) ---
+    // CÓDIGOS DE ERROR (CONSTANTES)
     public static final int ERROR_INICIAL = 1;
     public static final int ERROR_SINTACTICO = 101;
     public static final int ERROR_CADENA_OPERANDO = 103;
@@ -26,7 +26,7 @@ public class TablaErrores {
     public static final int ERROR_AGREGAR_INVALIDO = 501;
     public static final int ERROR_ELIMINAR_INVALIDO = 502; // Usado también para operadores de comparación
 
-    // --- MAPA DE DESCRIPCIONES ---
+    // MAPA DE DESCRIPCIONES 
     private static final Map<Integer, String> mapaErrores = new HashMap<>();
 
     static {
@@ -35,7 +35,6 @@ public class TablaErrores {
         mapaErrores.put(ERROR_SINTACTICO, "Error sintáctico."); 
         mapaErrores.put(ERROR_CADENA_OPERANDO, "Error en expresión de cadena.");
         
-        // Semánticos / Numéricos
         mapaErrores.put(ERROR_ARGUMENTO_VACIO, "Argumento inválido.");
         mapaErrores.put(ERROR_TIPO_DATOS, "Error de tipos.");
         mapaErrores.put(ERROR_FUNCION_INVALIDA, "Función numérica no reconocida.");

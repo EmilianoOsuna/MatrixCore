@@ -149,12 +149,11 @@ inicio() → prCrear() | prModificar() | prObtener()  | prMostrar()  | condicion
             panicoUsado = false;
             return nodo;
         }
-//---------------------------------------------------------------------------------------------------------------
-// -------------------------------------CREACIÓN DE VARIABLES----------------------------------------------------
+
+// CREACIÓN DE VARIABLES
 /*
 GRAMÁTICA UTILIZADA:
-prCrear() → prCadena() | prNum() | prVector() | prMatriz()
-     
+prCrear() → prCadena() | prNum() | prVector() | prMatriz() 
 */
     private NodoArbol prCrear() {
 
@@ -196,16 +195,13 @@ prCrear() → prCadena() | prNum() | prVector() | prMatriz()
         return nodo;
     }
 
-//------------------------------------------------------------------------------------------------------
-// -------------------------------------CREAR CADENA----------------------------------------------------
+
+// -CREAR CADENA-
 /*
 GRAMÁTICA UTILIZADA:
 prCadena() → IDENTIFICADOR = expresionCadena() ;
-
 expresionCadena() → operandoCadena() restoCadena() ;
-
 restoCadena() → + operandoCadena() restoCadena() | ε
-
 operandoCadena() → CADENA
                 | IDENTIFICADOR
                 | '(' expresionNumerica() ')'
@@ -282,12 +278,10 @@ operandoCadena() → CADENA
     }
     
     
-//------------------------------------------------------------------------------------------------------
-// -------------------------------------CREAR NUM-------------------------------------------------------
+// ----CREAR NUM
 /*
 GRAMÁTICA UTILIZADA:
 prNum() → IDENTIFICADOR = expresionNumerica() ';
-    
 expresionNumerica() → terminoNumerico() continuacionSumaResta()
 
 continuacionSumaResta() → '+' terminoNumerico() continuacionSumaResta()
@@ -627,8 +621,7 @@ operandoSimple() → expresionNumerica()
     }
 
 
-//------------------------------------------------------------------------------------------------------
-// -------------------------------------CREAR VECTOR----------------------------------------------------
+// CREAR VECTOR
 /*
 GRAMÁTICA UTILIZADA:
 prVector() → IDENTIFICADOR = expresionVector() ;
@@ -768,7 +761,7 @@ restoElementosVector() → ',' expresionNumerica() restoElementosVector()
     }
 
 /*
-Gramática para las operaciones especiales que seran necesarias en la creación de matrices.
+Gramática para las operaciones especiales necesarias en la creación de matrices.
 operacionEspecial()
     → PR_TRANSPUESTA '(' IDENTIFICADOR ')' 
     | PR_INVERSA     '(' IDENTIFICADOR ')'
@@ -837,8 +830,7 @@ operacionEspecial()
     }
 
 
-//------------------------------------------------------------------------------------------------------
-// -------------------------------------CREAR MATRIZ----------------------------------------------------    
+// CREAR MATRIZ   
 /*
 
 prMatriz()
@@ -1208,8 +1200,7 @@ tamañoMatriz()
         return null;
     }
     
- //-----------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------PROCEDIMIENTOS NUMÉRICOS CON MATRICES---------------------------------------------------
+// PROCEDIMIENTOS NUMÉRICOS CON MATRICES
 /*
 propiedadNumerica()
     → RANGO '(' IDENTIFICADOR ')'
@@ -1270,8 +1261,7 @@ metodoDeterminante()
         }
         return nodo;
     }
- //-----------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------OPERACIONES CON VECTORES----------------------------------------------------------------
+// OPERACIONES CON VECTORES
 /* operacionVector() → PR_PPUNTO '(' IDENTIFICADOR ',' IDENTIFICADOR ')' 
                     | PR_CRUZ   '(' IDENTIFICADOR ',' IDENTIFICADOR ')' 
                     | PR_NORMALIZAR '(' IDENTIFICADOR ')' 
@@ -1327,8 +1317,7 @@ metodoDeterminante()
         }
         return nodo;
     }
-//-------------------------------------------- ------------------------------------------------------------
-// -------------------------------------MÉTODO MOSTRAR----------------------------------------------------
+// MÉTODO MOSTRAR
 /*
 GRAMÁTICA UTILIZADA:
 prMostrar() → expresionCadena() | accion() ';'
@@ -1433,8 +1422,7 @@ prMostrar() → expresionCadena() | accion() ';'
 
     
     
-//------------------------------------------------------------------------------------------------------
-// ---------------------------------MODIFICAR MATRIZ----------------------------------------------------    
+// MODIFICAR MATRIZ  
 /*
 prModificar() → IDENTIFICADOR accionMatriz() ';'
 
@@ -1496,10 +1484,8 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
         }
     }
 
-    /* ===============================
-       CAMBIAR UNA CELDA
-       =============================== */
-/* CELDA '(' fila ',' columna ')' '=' expresionNumerica ';' */
+//CAMBIAR UNA CELDA
+//CELDA '(' fila ',' columna ')' '=' expresionNumerica ';' 
     private NodoArbol cambiarCelda() {
         if (panicoUsado) return null;
         NodoArbol nodo = new NodoArbol("cambiarCelda");
@@ -1529,10 +1515,9 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
         return nodo;
     }
 
-    /* ===============================
-       AGREGAR FILA / COLUMNA
-       =============================== */
-    /* AGREGAR (FILA | COLUMNA) expresionVector ';' */
+
+//AGREGAR FILA / COLUMNA
+//AGREGAR (FILA | COLUMNA) expresionVector ';' */
     private NodoArbol agregarFilaColumna() {
         if (panicoUsado) return null;
         NodoArbol nodo = new NodoArbol("agregarFilaColumna");
@@ -1562,10 +1547,8 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
         return nodo;
     }
 
-    /* ===============================
-       ELIMINAR FILA / COLUMNA
-       =============================== */
-    /* ELIMINAR (FILA | COLUMNA) expresionNumerica ';' */
+//ELIMINAR FILA / COLUMNA
+//ELIMINAR (FILA | COLUMNA) expresionNumerica ';' 
     private NodoArbol eliminarFilaColumna() {
         if (panicoUsado) return null;
         NodoArbol nodo = new NodoArbol("eliminarFilaColumna");
@@ -1595,10 +1578,8 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
         return nodo;
     }
 
-    /* ===============================
-       REEMPLAZAR FILA / COLUMNA
-       =============================== */
-    /* (FILA | COLUMNA) expresionNumerica '=' expresionVector ';' */
+//REEMPLAZAR FILA / COLUMNA
+//(FILA | COLUMNA) expresionNumerica '=' expresionVector ';' 
     private NodoArbol reemplazarFilaColumna() {
         if (panicoUsado) return null;
         NodoArbol nodo = new NodoArbol("reemplazarFilaColumna");
@@ -1619,8 +1600,7 @@ reemplazarFilaColumna() → tipoFilaColumna expresionNumerica() '=' expresionVec
     }
     
     
-//------------------------------------------------------------------------------------------------------
-// ---------------------------------OBTENER-------------------------------------------------------------    
+// OBTENER    
 /*
 GRAMÁTICA UTILIZADA:
 prObtener() → OBTENER operacionObtener() ';'
@@ -1741,8 +1721,8 @@ obtenerColumna() → COLUMNA expresionNumerica() DE IDENTIFICADOR
             "Se espera el identificador de la matriz de la cual se desea obtener la columna."));
         return nodo;
     }  
-//------------------------------------------------------------------------------------------------------------
-// -----------------------------------------CONDICIONALES----------------------------------------------------- 
+
+//CONDICIONALES
 /* condicional() → SI '(' condicion() ')' ENTONCES inicio() bloqueSino() FIN_SI
 
 bloqueSino() → SINO inicio() | ε
